@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
 
     # Local apps
+    'users',
 
     # Third-party apps
     'django_browser_reload',
