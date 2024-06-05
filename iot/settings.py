@@ -26,11 +26,14 @@ INSTALLED_APPS = [
 
     # Local apps
     'users',
+    'api',
 
     # Third-party apps
     'django_browser_reload',
     'debug_toolbar',
     'django_extensions',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 SITE_ID = 1
