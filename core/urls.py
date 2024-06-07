@@ -7,7 +7,7 @@ urlpatterns = [
     path("__debug__/", include("debug_toolbar.urls")),
     path("__reload__/", include("django_browser_reload.urls"), name="browser_reload"),
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),
+    path('api/', include('core.api.urls')),
 ]
 
 if not settings.PRODUCTION:

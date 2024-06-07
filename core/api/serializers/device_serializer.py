@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import Device
+from core.api.models import Device
 
 class DeviceSerializer(serializers.ModelSerializer):
     # number = serializers.SerializerMethodField(read_only=True)

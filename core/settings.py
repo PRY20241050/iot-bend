@@ -24,16 +24,15 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
 
-    # Local apps
-    'users',
-    'api',
-
     # Third-party apps
     'django_browser_reload',
     'debug_toolbar',
     'django_extensions',
     'rest_framework',
-    'rest_framework.authtoken',
+
+    # Local apps
+    'core.api',
+    'core.users',
 ]
 
 SITE_ID = 1
@@ -52,7 +51,7 @@ MIDDLEWARE = [
     'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
-ROOT_URLCONF = 'iot.urls'
+ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
@@ -70,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'iot.wsgi.application'
+WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
 
@@ -114,6 +113,11 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+# Custom User Model
+# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/#substituting-a-custom-user-model
+
+AUTH_USER_MODEL = 'users.CustomUser'
 
 
 # HTTPS settings
