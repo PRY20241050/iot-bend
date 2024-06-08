@@ -9,18 +9,3 @@ class CustomUser(AbstractUser):
 
     class Meta:
         db_table = 'auth_user'
-
-    # groups = models.ManyToManyField(
-    #     Group,
-    #     related_name='customuser_set',  # Cambia related_name para evitar conflictos
-    #     blank=True,
-    #     help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-    #     related_query_name='customuser',
-    # )
-    # user_permissions = models.ManyToManyField(
-    #     Permission,
-    #     related_name='customuser_set',  # Cambia related_name para evitar conflictos
-    #     blank=True,
-    #     help_text='Specific permissions for this user.',
-    #     related_query_name='customuser',
-    # )
