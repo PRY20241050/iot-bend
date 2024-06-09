@@ -9,7 +9,6 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from .tokens import account_activation_token
-from django.urls import reverse
 import os
 
 class Register(APIView):
@@ -48,14 +47,14 @@ class PasswordResetView(APIView):
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 token = account_activation_token.make_token(user)
                 reset_link = f"{os.getenv('FRONTEND_RECOVER_URL', '')}/?uid={uid}&token={token}"
-                mail_subject = 'Password Reset'
+                mail_subject = 'Restablecer contraseña'
                 message = render_to_string('password_reset_email.html', {
                     'user': user,
                     'reset_link': reset_link,
                 })
                 send_mail(mail_subject, message, 'from@example.com', [user.email])
-                return Response({'detail': 'Password reset email has been sent.'}, status=status.HTTP_200_OK)
-            return Response({'email': 'No user with this email.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'El email fue enviado'}, status=status.HTTP_200_OK)
+            return Response({'email': 'No se encontró un usuario asociado a este correo'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetConfirmView(APIView):
@@ -70,8 +69,8 @@ class PasswordResetConfirmView(APIView):
                 if account_activation_token.check_token(user, token):
                     user.set_password(serializer.data['new_password'])
                     user.save()
-                    return Response({'detail': 'Password has been reset.'}, status=status.HTTP_200_OK)
-                return Response({'token': 'Invalid token.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'detail': 'La contraseña fue restablecida'}, status=status.HTTP_200_OK)
+                return Response({'token': 'Token inválido'}, status=status.HTTP_400_BAD_REQUEST)
             except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-                return Response({'uid': 'Invalid user id.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'uid': 'Usuario inválido'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
