@@ -20,5 +20,12 @@ urlpatterns = [
     
     path('sensors/', views.SensorListCreateView.as_view(), name='sensor-list-create'),
     path('sensors/<int:pk>/', views.SensorRetrieveUpdateDestroyView.as_view(), name='sensor-detail'),
-    path('device/<int:device_id>/sensors/', views.SensorsByDeviceView.as_view(), name='sensors-by-device')
+    path('device/<int:device_id>/sensors/', views.SensorsByDeviceView.as_view(), name='sensors-by-device'),
+    
+    path('status/', views.StatusListCreateView.as_view(), name='status-list-create'),
+    path('status/<int:pk>/', views.StatusRetrieveUpdateDestroyView.as_view(), name='status-detail'),
+    
+    path('measurements/', views.MeasurementListCreateView.as_view(), name='measurement-list-create'),
+    path('measurements/<int:pk>/', views.MeasurementRetrieveUpdateDestroyView.as_view(), name='measurement-detail'),
+    path('sensors/<int:sensor_id>/measurements/', views.MeasurementBySensorView.as_view(), name='measurements-by-sensor'),
 ]

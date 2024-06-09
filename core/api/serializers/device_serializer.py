@@ -1,8 +1,11 @@
 from rest_framework import serializers
 
 from core.api.models import Device
+from .sensor_serializer import SensorSerializer
 
 class DeviceSerializer(serializers.ModelSerializer):
+    sensors = SensorSerializer(many=True, read_only=True, source='sensor_set')
+    
     class Meta:
         model = Device
         fields = '__all__'

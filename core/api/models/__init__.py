@@ -6,7 +6,19 @@ from .gas_type import GasType
 from .institution import Institution
 from .limit_history import LimitHistory
 from .management import Management
-from .measurement import Measurement
+from .measurement import Measurement, Status
 from .sensor import Sensor
 
-__all__ = ['Alert', 'Brickyard', 'Device', 'EmissionLimit', 'GasType', 'Institution', 'LimitHistory', 'Management', 'Measurement', 'Sensor']
+__all__ = [
+    'Alert', 
+    'Brickyard', 
+    'Device', 
+    'EmissionLimit', 
+    'GasType', 
+    'Institution', 
+    'LimitHistory', 
+    'Management', 
+    'Measurement', 
+    'Status', 
+    'Sensor'
+    ]

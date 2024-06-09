@@ -4,6 +4,7 @@ from .institution_serializer import InstitutionSerializer
 from .management_serializer import ManagementSerializer
 from .gas_type_serializer import GasTypeSerializer
 from .sensor_serializer import SensorSerializer
+from .measurement_serializer import StatusSerializer, MeasurementSerializer
 
 __all__ = [
     'DeviceSerializer', 
@@ -11,5 +12,7 @@ __all__ = [
     'InstitutionSerializer', 
     'ManagementSerializer', 
     'GasTypeSerializer',
-    'SensorSerializer'
+    'SensorSerializer',
+    'StatusSerializer',
+    'MeasurementSerializer'
     ]

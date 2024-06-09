@@ -4,6 +4,7 @@ from .management_view import add_brickyard_to_institution, add_multiple_brickyar
 from .device_view import DeviceListCreateView, DeviceRetrieveUpdateDestroyView, DeviceByBrickyardView
 from .gas_type_view import GasTypeListCreateView, GasTypeRetrieveUpdateDestroyView
 from .sensor_view import SensorListCreateView, SensorRetrieveUpdateDestroyView, SensorsByDeviceView
+from .measurement_view import StatusListCreateView, StatusRetrieveUpdateDestroyView, MeasurementListCreateView, MeasurementRetrieveUpdateDestroyView, MeasurementBySensorView
 
 __all__ = [
     'BrickyardListCreateView', 
@@ -19,5 +20,10 @@ __all__ = [
     'GasTypeRetrieveUpdateDestroyView',
     'SensorListCreateView',
     'SensorRetrieveUpdateDestroyView',
-    'SensorsByDeviceView'
+    'SensorsByDeviceView',
+    'StatusListCreateView',
+    'StatusRetrieveUpdateDestroyView',
+    'MeasurementListCreateView',
+    'MeasurementRetrieveUpdateDestroyView',
+    'MeasurementBySensorView'
     ]

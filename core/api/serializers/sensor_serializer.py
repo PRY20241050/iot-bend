@@ -1,8 +1,11 @@
 from rest_framework import serializers
+from .measurement_serializer import MeasurementSerializer
 
 from core.api.models import Sensor
 
 class SensorSerializer(serializers.ModelSerializer):
+    measurements = MeasurementSerializer(many=True, read_only=True, source='measurement_set')
+    
     class Meta:
         model = Sensor
         fields = '__all__'
