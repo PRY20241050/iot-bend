@@ -27,5 +27,13 @@ urlpatterns = [
     
     path('measurements/', views.MeasurementListCreateView.as_view(), name='measurement-list-create'),
     path('measurements/<int:pk>/', views.MeasurementRetrieveUpdateDestroyView.as_view(), name='measurement-detail'),
-    path('sensors/<int:sensor_id>/measurements/', views.MeasurementBySensorView.as_view(), name='measurements-by-sensor'),
+    path('sensor/<int:sensor_id>/measurements/', views.MeasurementBySensorView.as_view(), name='measurements-by-sensor'),
+    
+    path('emission_limits/', views.EmissionLimitListCreateView.as_view(), name='emission-limit-list-create'),
+    path('emission_limits/<int:pk>/', views.EmissionLimitRetrieveUpdateDestroyView.as_view(), name='emission-limit-detail'),
+    path('management/<int:management_id>/emission_limits/', views.EmissionLimitByManagementView.as_view(), name='emission-limits-by-management'),
+    
+    path('limit_history/', views.LimitHistoryListCreateView.as_view(), name='limit-history-list-create'),
+    path('limit_history/<int:pk>/', views.LimitHistoryRetrieveUpdateDestroyView.as_view(), name='limit-history-detail'),
+    path('emission_limit/<int:emission_limit_id>/limit_history/', views.LimitHistorysByEmissionLimitView.as_view(), name='limit-history-by-emission-limit'),
 ]

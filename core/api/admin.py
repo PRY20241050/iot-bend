@@ -15,6 +15,10 @@ class MeasurementInline(admin.TabularInline):
     model = models.Measurement
     extra = 1
 
+class LimitHistoryInline(admin.TabularInline):
+    model = models.LimitHistory
+    extra = 1
+
 class BrickyardAdmin(admin.ModelAdmin):
     model = models.Brickyard
     list_display = ['name', 'address', 'ruc', 'phone', 'contact']
@@ -50,6 +54,11 @@ class MeasurementAdmin(admin.ModelAdmin):
     model = models.Measurement
     list_display = ['id', 'sensor', 'status', 'value', 'date']
 
+class EmissionLimitAdmin(admin.ModelAdmin):
+    model = models.EmissionLimit
+    list_display = ['id', 'name', 'email_alert', 'app_alert', 'management']
+    inlines = [LimitHistoryInline]
+
 admin_site.register(models.Brickyard, BrickyardAdmin)
 admin_site.register(models.Institution, InstitutionAdmin)
 admin_site.register(models.Management, ManagementAdmin)
@@ -58,3 +67,4 @@ admin_site.register(models.GasType, GasTypeAdmin)
 admin_site.register(models.Sensor, SensorAdmin)
 admin_site.register(models.Status, StatusAdmin)
 admin_site.register(models.Measurement, MeasurementAdmin)
+admin_site.register(models.EmissionLimit, EmissionLimitAdmin)

@@ -5,6 +5,8 @@ from .management_serializer import ManagementSerializer
 from .gas_type_serializer import GasTypeSerializer
 from .sensor_serializer import SensorSerializer
 from .measurement_serializer import StatusSerializer, MeasurementSerializer
+from .emission_limit_serializer import EmissionLimitSerializer
+from .limit_history_serializer import LimitHistorySerializer
 
 __all__ = [
     'DeviceSerializer', 
@@ -14,5 +16,7 @@ __all__ = [
     'GasTypeSerializer',
     'SensorSerializer',
     'StatusSerializer',
-    'MeasurementSerializer'
+    'MeasurementSerializer',
+    'EmissionLimitSerializer',
+    'LimitHistorySerializer'
     ]
