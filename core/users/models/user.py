@@ -9,3 +9,5 @@ class CustomUser(AbstractUser):
 
     class Meta:
         db_table = 'auth_user'
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'

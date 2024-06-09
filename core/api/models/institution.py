@@ -16,3 +16,5 @@ class Institution(models.Model):
     
     class Meta:
         db_table = 'institucion'
+        verbose_name = 'Institución'
+        verbose_name_plural = 'Instituciones'

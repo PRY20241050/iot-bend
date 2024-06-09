@@ -15,3 +15,5 @@ class Brickyard(models.Model):
     
     class Meta:
         db_table = 'ladrillera'
+        verbose_name = 'Ladrillera'
+        verbose_name_plural = 'Ladrilleras'
