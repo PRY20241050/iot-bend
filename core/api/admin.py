@@ -1,5 +1,10 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 from . import models
+
+admin.site.site_header = _('Sistema de monitoreo IoT')
+admin.site.site_title = _('Sistema de monitoreo IoT')
+admin.site.index_title = _('Bienvenido al sistema de monitoreo IoT')
 
 class ManagementInline(admin.TabularInline):
     model = models.Management
@@ -55,4 +60,3 @@ class StatusAdmin(admin.ModelAdmin):
 class MeasurementAdmin(admin.ModelAdmin):
     model = models.Measurement
     list_display = ['id', 'sensor', 'status', 'value', 'date']
-
