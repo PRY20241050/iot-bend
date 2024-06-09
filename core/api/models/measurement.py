@@ -5,7 +5,9 @@ class Measurement(models.Model):
     date = models.DateTimeField(auto_now_add=False, blank=True, null=True, verbose_name='Fecha')
     
     sensor = models.ForeignKey('api.Sensor', on_delete=models.CASCADE, blank=False, null=False, verbose_name='Sensor')
-    gas_type = models.ForeignKey('api.Status', on_delete=models.CASCADE, blank=False, null=False, verbose_name='Estado')
+    status_measurement = models.ForeignKey('api.Status', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Estado de la lectura')
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
     
     def __str__(self):
         return self.value

@@ -8,7 +8,9 @@ class Sensor(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
     
     def __str__(self):
-        return self.name
+        return self.gas_type.name
     
     class Meta:
         db_table = 'sensor'
+        verbose_name = 'Sensor'
+        verbose_name_plural = 'Sensores'

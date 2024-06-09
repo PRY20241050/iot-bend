@@ -19,6 +19,8 @@ def add_brickyard_to_institution(request, institution_id, brickyard_id):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def add_multiple_brickyards_to_institution(request, institution_id):
     try:
         institution = Institution.objects.get(pk=institution_id)
