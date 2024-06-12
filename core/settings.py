@@ -98,8 +98,8 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # CORS settings
 # https://pypi.org/project/django-cors-headers/
 
+#CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = os.getenv('ALLOWED_HOSTS', 'database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app').split(' ')
 
 REST_FRAMEWORK = {
