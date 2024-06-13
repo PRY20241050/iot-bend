@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import CustomUser as User
-from api.serializers import BrickyardSerializer, InstitutionSerializer
+from core.api.serializers import BrickyardSerializer, InstitutionSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     brickyard = BrickyardSerializer(read_only=True)
