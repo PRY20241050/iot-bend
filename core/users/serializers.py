@@ -1,10 +1,14 @@
 from rest_framework import serializers
 from .models import CustomUser as User
+from api.serializers import BrickyardSerializer, InstitutionSerializer
 
 class UserSerializer(serializers.ModelSerializer):
+    brickyard = BrickyardSerializer(read_only=True)
+    institution = InstitutionSerializer(read_only=True)
+    
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 'role', 'is_staff', 'is_superuser', 'brickyard', 'institution']
+        fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 'is_active', 'role', 'is_staff', 'is_superuser', 'brickyard', 'institution']
         extra_kwargs = {'password': {'write_only': True}, 'is_staff': {'read_only': True}, 'is_superuser': {'read_only': True}}
         
     def validate(self, data):

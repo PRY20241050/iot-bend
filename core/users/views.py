@@ -1,23 +1,31 @@
-from rest_framework.views import APIView
+import os
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .serializers import UserSerializer, ChangePasswordSerializer, PasswordResetSerializer, SetNewPasswordSerializer
-from .models import CustomUser as User
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from .tokens import account_activation_token
-import os
+from .serializers import UserSerializer, ChangePasswordSerializer, PasswordResetSerializer, SetNewPasswordSerializer
+from .models import CustomUser as User
 
-class Register(APIView):
+class UserRegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         
         return Response(serializer.data)
+    
+class UserDetailView(RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
