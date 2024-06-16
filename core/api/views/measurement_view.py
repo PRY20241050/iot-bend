@@ -63,4 +63,15 @@ class MeasurementCreateView(CreateAPIView):
             except Sensor.DoesNotExist:
                 return Response({"error": f"No se encontró el sensor para el gas: {gas}"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if 'temperature' in data:
+            try:
+                temperature_sensor = Sensor.objects.get(device_id=device_id, gas_type_id=6)
+                Measurement.objects.create(
+                    value=data['temperature'],
+                    date=datetime_obj,
+                    sensor=temperature_sensor
+                )
+            except Sensor.DoesNotExist:
+                return Response({"error": "No se encontró el sensor para la temperatura"}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response({"detail": "Guardado exitosamente"}, status=status.HTTP_201_CREATED)

@@ -16,12 +16,13 @@ class CreateMeasurementSerializer(serializers.ModelSerializer):
     deviceId = serializers.IntegerField()
     date = serializers.DateField()
     time = serializers.TimeField()
-    pm25 = serializers.DecimalField(max_digits=12, decimal_places=8)
-    pm10 = serializers.DecimalField(max_digits=12, decimal_places=8)
-    co = serializers.DecimalField(max_digits=12, decimal_places=8)
-    no2 = serializers.DecimalField(max_digits=12, decimal_places=8)
-    so2 = serializers.DecimalField(max_digits=12, decimal_places=8)
+    pm25 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    pm10 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    co = serializers.DecimalField(max_digits=9, decimal_places=4)
+    no2 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    so2 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    temperature = serializers.DecimalField(max_digits=9, decimal_places=4, required=False, allow_null=True)
     
     class Meta:
         model = Measurement
-        fields = ['deviceId', 'date', 'time', 'pm25', 'pm10', 'co', 'no2', 'so2']
+        fields = ['deviceId', 'date', 'time', 'pm25', 'pm10', 'co', 'no2', 'so2', 'temperature']
