@@ -1,7 +1,7 @@
 from django.db import models
 
 class Measurement(models.Model):
-    value = models.DecimalField(max_digits=6, decimal_places=2, default=0, verbose_name='Valor', help_text='Medido en mg x m3')
+    value = models.DecimalField(max_digits=9, decimal_places=5, default=0, verbose_name='Valor', help_text='Medido en mg x m3')
     date = models.DateTimeField(auto_now_add=False, blank=True, null=True, verbose_name='Fecha')
     
     sensor = models.ForeignKey('api.Sensor', on_delete=models.CASCADE, blank=False, null=False, verbose_name='Sensor')

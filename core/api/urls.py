@@ -25,7 +25,8 @@ urlpatterns = [
     path('status/', views.StatusListCreateView.as_view(), name='status-list-create'),
     path('status/<int:pk>/', views.StatusRetrieveUpdateDestroyView.as_view(), name='status-detail'),
     
-    path('measurements/', views.MeasurementListCreateView.as_view(), name='measurement-list-create'),
+    path('measurements/', views.MeasurementListView.as_view(), name='measurement-list'),
+    path('measurements/create/', views.MeasurementCreateView.as_view(), name='measurement-create'),
     path('measurements/<int:pk>/', views.MeasurementRetrieveUpdateDestroyView.as_view(), name='measurement-detail'),
     path('sensor/<int:sensor_id>/measurements/', views.MeasurementBySensorView.as_view(), name='measurements-by-sensor'),
     

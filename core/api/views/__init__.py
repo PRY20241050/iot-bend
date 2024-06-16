@@ -4,7 +4,7 @@ from .management_view import add_brickyard_to_institution, add_multiple_brickyar
 from .device_view import DeviceListCreateView, DeviceRetrieveUpdateDestroyView, DeviceByBrickyardView
 from .gas_type_view import GasTypeListCreateView, GasTypeRetrieveUpdateDestroyView
 from .sensor_view import SensorListCreateView, SensorRetrieveUpdateDestroyView, SensorsByDeviceView
-from .measurement_view import StatusListCreateView, StatusRetrieveUpdateDestroyView, MeasurementListCreateView, MeasurementRetrieveUpdateDestroyView, MeasurementBySensorView
+from .measurement_view import StatusListCreateView, StatusRetrieveUpdateDestroyView, MeasurementListView, MeasurementRetrieveUpdateDestroyView, MeasurementBySensorView, MeasurementCreateView
 from .emission_limit_view import EmissionLimitListCreateView, EmissionLimitRetrieveUpdateDestroyView, EmissionLimitByManagementView
 from .limit_history_view import LimitHistoryListCreateView, LimitHistoryRetrieveUpdateDestroyView, LimitHistorysByEmissionLimitView
 
@@ -25,9 +25,10 @@ __all__ = [
     'SensorsByDeviceView',
     'StatusListCreateView',
     'StatusRetrieveUpdateDestroyView',
-    'MeasurementListCreateView',
+    'MeasurementListView',
     'MeasurementRetrieveUpdateDestroyView',
     'MeasurementBySensorView',
+    'MeasurementCreateView',
     'EmissionLimitListCreateView',
     'EmissionLimitRetrieveUpdateDestroyView',
     'EmissionLimitByManagementView',

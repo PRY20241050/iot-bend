@@ -39,7 +39,7 @@ class DeviceAdmin(admin.ModelAdmin):
 
 class GasTypeAdmin(admin.ModelAdmin):
     model = models.GasType
-    list_display = ['name', 'abbreviation']
+    list_display = ['id', 'name', 'abbreviation']
 
 class SensorAdmin(admin.ModelAdmin):
     model = models.Sensor
