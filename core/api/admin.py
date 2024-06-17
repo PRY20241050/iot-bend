@@ -56,7 +56,7 @@ class MeasurementAdmin(admin.ModelAdmin):
 
 class EmissionLimitAdmin(admin.ModelAdmin):
     model = models.EmissionLimit
-    list_display = ['id', 'name', 'email_alert', 'app_alert', 'management']
+    list_display = ['id', 'name', 'email_alert', 'app_alert', 'management', 'institution', 'is_default']
     inlines = [LimitHistoryInline]
 
 admin_site.register(models.Brickyard, BrickyardAdmin)
