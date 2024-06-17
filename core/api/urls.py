@@ -11,9 +11,12 @@ urlpatterns = [
     path('institution/<int:institution_id>/brickyard/<int:brickyard_id>/', views.add_brickyard_to_institution, name='add-brickyard-to-institution'),
     path('institution/<int:institution_id>/add_brickyards/', views.add_multiple_brickyards_to_institution, name='add-brickyards-to-institution'),
     
+    # using (params: brickyard_id)
     path('devices/', views.DeviceListCreateView.as_view(), name='device-list-create'),
+    # using
     path('devices/<int:pk>/', views.DeviceRetrieveUpdateDestroyView.as_view(), name='device-detail'),
-    path('brickyard/<int:brickyard_id>/devices/', views.DeviceByBrickyardView.as_view(), name='devices-by-brickyard'),
+    # using
+    path('devices/<int:device_id>/sensors/last_measurements/', views.SensorLastMeasurementView.as_view(), name='sensor_last_measurements'),
     
     path('gases/', views.GasTypeListCreateView.as_view(), name='gas-list-create'),
     path('gases/<int:pk>/', views.GasTypeRetrieveUpdateDestroyView.as_view(), name='gas-detail'),

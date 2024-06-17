@@ -1,7 +1,7 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from core.api.models import Sensor
-from core.api.serializers import SensorSerializer
+from core.api.serializers import SensorSerializer, SensorWithLastMeasurementSerializer
 
 class SensorListCreateView(ListCreateAPIView):
     queryset = Sensor.objects.all()
@@ -16,6 +16,13 @@ class SensorRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
 class SensorsByDeviceView(ListAPIView):
     serializer_class = SensorSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        device_id = self.kwargs['device_id']
+        return Sensor.objects.filter(device_id=device_id)
+    
+class SensorLastMeasurementView(ListAPIView):
+    serializer_class = SensorWithLastMeasurementSerializer
 
     def get_queryset(self):
         device_id = self.kwargs['device_id']
