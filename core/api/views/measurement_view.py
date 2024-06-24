@@ -1,11 +1,12 @@
+from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.response import Response
-from django.utils.dateparse import parse_datetime
-
-from core.api.models import Status, Measurement, Sensor
-from core.api.serializers import StatusSerializer, MeasurementSerializer, CreateMeasurementSerializer
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+
+from core.api.models import Status, Measurement, Sensor, Brickyard
+from core.api.serializers import StatusSerializer, MeasurementSerializer, MeasurementPaginationSerializer, CreateMeasurementSerializer
 
 class StatusListCreateView(ListAPIView):
     queryset = Status.objects.all()
@@ -14,6 +15,8 @@ class StatusListCreateView(ListAPIView):
 class StatusRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     queryset = Status.objects.all()
     serializer_class = StatusSerializer
+
+# ------------------------
     
 class MeasurementListView(ListCreateAPIView):
     queryset = Measurement.objects.all()
@@ -25,6 +28,8 @@ class MeasurementRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = MeasurementSerializer
     permission_classes = [IsAuthenticated]
 
+# ------------------------
+
 class MeasurementBySensorView(ListAPIView):
     serializer_class = MeasurementSerializer
     permission_classes = [IsAuthenticated]
@@ -32,6 +37,26 @@ class MeasurementBySensorView(ListAPIView):
     def get_queryset(self):
         sensor_id = self.kwargs['sensor_id']
         return Measurement.objects.filter(sensor_id=sensor_id)
+
+class MeasurementPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+class MeasurementPaginatedListView(ListAPIView):
+    serializer_class = MeasurementPaginationSerializer
+    pagination_class = MeasurementPagination
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        brickyard_ids = self.request.query_params.get('brickyard_ids')
+        if not brickyard_ids:
+            return Measurement.objects.none()
+        
+        # Verify all brickyard_ids are existing
+        Brickyard.objects.filter(id__in=brickyard_ids)
+        
+        return Measurement.objects.filter(sensor__device__brickyard_id__in=brickyard_ids).order_by('-date')
 
 class MeasurementCreateView(CreateAPIView):
     serializer_class = CreateMeasurementSerializer

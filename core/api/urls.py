@@ -32,6 +32,8 @@ urlpatterns = [
     path('measurements/create/', views.MeasurementCreateView.as_view(), name='measurement-create'),
     path('measurements/<int:pk>/', views.MeasurementRetrieveUpdateDestroyView.as_view(), name='measurement-detail'),
     path('sensor/<int:sensor_id>/measurements/', views.MeasurementBySensorView.as_view(), name='measurements-by-sensor'),
+    # using (params: brickyard_ids)
+    path('measurements/paginated/', views.MeasurementPaginatedListView.as_view(), name='measurement-paginated-list'),
     
     path('emission_limits/', views.EmissionLimitListCreateView.as_view(), name='emission-limit-list-create'),
     path('emission_limits/<int:pk>/', views.EmissionLimitRetrieveUpdateDestroyView.as_view(), name='emission-limit-detail'),

@@ -16,6 +16,10 @@ class Measurement(models.Model):
         db_table = 'medicion'
         verbose_name = 'Medición'
         verbose_name_plural = 'Mediciones'
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['sensor']),
+        ]
 
 class Status(models.Model):
     name = models.CharField(max_length=50, blank=False, verbose_name='Nombre')
