@@ -6,8 +6,7 @@ class Alert(models.Model):
     is_read = models.BooleanField(default=False, verbose_name='Leído')
     date = models.DateTimeField(auto_now=True, verbose_name='Fecha')
 
-    measurement = models.OneToOneField('api.Measurement', on_delete=models.CASCADE, blank=False, null=False, verbose_name='Medición')
-    limit_history = models.ForeignKey('api.LimitHistory', on_delete=models.CASCADE, blank=False, null=False, verbose_name='Historial de límites')
+    user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, verbose_name='Usuario')
 
     def __str__(self):
         return self.name

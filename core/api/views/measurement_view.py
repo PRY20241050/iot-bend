@@ -155,7 +155,8 @@ class MeasurementCreateView(CreateAPIView):
         with transaction.atomic():
             for gas, gas_id in gas_types.items():
                 try:
-                    sensor = Sensor.objects.select_related('device', 'gas_type').get(device_id=device_id, gas_type_id=gas_id)
+                    sensor = Sensor.objects.select_related('device', 'gas_type').get(
+                        device_id=device_id, gas_type_id=gas_id)
                     measurement = Measurement.objects.create(
                         value=data[gas],
                         date=datetime_obj,
@@ -200,34 +201,37 @@ class MeasurementCreateView(CreateAPIView):
 
     def send_alerts_and_create_notifications(self, exceeded_limits):
         for emission_limit, gases in exceeded_limits.items():
-            if emission_limit.email_alert or emission_limit.app_alert:
-                recipients = self.get_recipients(emission_limit) if emission_limit.email_alert else []
-                if recipients:
-                    print(recipients)
-                    subject = "Alerta de emisión excedida"
-                    message = self.create_email_message(emission_limit, gases)
-                    
-                    if emission_limit.email_alert and recipients:
-                        send_mail(subject, message, 'pry20241050@tuservicio.com', recipients)
+            recipients = self.get_recipients(
+                emission_limit) if emission_limit.email_alert else []
 
-                    if emission_limit.app_alert:
-                        for gas_info in gases:
-                            Alert.objects.create(
-                                name=f"Alerta de {gas_info['gas']}",
-                                description=message,
-                                measurement=gas_info['measurement'],
-                                limit_history=gas_info['limit_history']
-                            )
+            for recipient in recipients:
+                subject = 'Alerta de Límite de Emisión Excedido'
+                message = self.create_email_message(emission_limit, gases)
+
+                if emission_limit.email_alert:
+                    send_mail(subject, message,
+                              'no-reply@tuservicio.com', [recipient.email])
+
+                if emission_limit.app_alert:
+                    Alert.objects.create(
+                        name=f"Alerta de {emission_limit.name}",
+                        description=message,
+                        user=recipient
+                    )
 
     def get_recipients(self, emission_limit):
         recipients = set()
         if emission_limit.institution:
-            users = CustomUser.objects.filter(institution=emission_limit.institution).values_list('email', flat=True)
+            users = CustomUser.objects.filter(
+                institution=emission_limit.institution)
             recipients.update(users)
         if emission_limit.management:
-            brickyard_users = CustomUser.objects.filter(brickyard=emission_limit.management.brickyard).values_list('email', flat=True)
-            institution_users = CustomUser.objects.filter(institution=emission_limit.management.institution).values_list('email', flat=True)
+            brickyard_users = CustomUser.objects.filter(
+                brickyard=emission_limit.management.brickyard)
+            institution_users = CustomUser.objects.filter(
+                institution=emission_limit.management.institution)
             recipients.update([*brickyard_users, *institution_users])
+            
         return list(recipients)
 
     def create_email_message(self, emission_limit, gases):
