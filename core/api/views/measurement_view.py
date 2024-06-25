@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q, Avg, F
 from django.db.models.functions import Trunc
 from django.core.mail import send_mail
@@ -8,7 +9,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 
-from core.api.models import Status, Measurement, Sensor, GasType, LimitHistory
+from core.api.models import Status, Measurement, Sensor, GasType, LimitHistory, Alert
 from core.api.serializers import (StatusSerializer, MeasurementSerializer,
                                   MeasurementPaginationSerializer, CreateMeasurementSerializer, MeasurementGroupedPeriodeSerializer)
 from core.users.models import CustomUser
@@ -151,75 +152,86 @@ class MeasurementCreateView(CreateAPIView):
 
         exceeded_limits = {}
 
-        for gas, gas_id in gas_types.items():
-            try:
-                sensor = Sensor.objects.get(
-                    device_id=device_id, gas_type_id=gas_id)
-                measurement = Measurement.objects.create(
-                    value=data[gas],
-                    date=datetime_obj,
-                    sensor=sensor
-                )
+        with transaction.atomic():
+            for gas, gas_id in gas_types.items():
+                try:
+                    sensor = Sensor.objects.select_related('device', 'gas_type').get(device_id=device_id, gas_type_id=gas_id)
+                    measurement = Measurement.objects.create(
+                        value=data[gas],
+                        date=datetime_obj,
+                        sensor=sensor
+                    )
 
-                # Verificar si el valor excede el límite
-                limit_histories = LimitHistory.objects.filter(
-                    gas_type_id=gas_id,
-                    emission_limit__management__brickyard = sensor.device.brickyard
-                )
-                
-                for limit_history in limit_histories:
-                    print(".........")
-                    if measurement.value > limit_history.max_limit:
-                        emission_limit = limit_history.emission_limit
-                        if emission_limit not in exceeded_limits:
-                            exceeded_limits[emission_limit] = []
-                        exceeded_limits[emission_limit].append({
-                            "gas": gas,
-                            "value": measurement.value,
-                        })
+                    limit_histories = LimitHistory.objects.select_related('emission_limit').filter(
+                        gas_type_id=gas_id,
+                        emission_limit__management__brickyard=sensor.device.brickyard
+                    )
 
-            except Sensor.DoesNotExist:
-                return Response({"error": f"No se encontró el sensor para el gas: {gas}"}, status=status.HTTP_400_BAD_REQUEST)
+                    for limit_history in limit_histories:
+                        if measurement.value > limit_history.max_limit:
+                            emission_limit = limit_history.emission_limit
+                            if emission_limit not in exceeded_limits:
+                                exceeded_limits[emission_limit] = []
+                            exceeded_limits[emission_limit].append({
+                                "gas": gas,
+                                "value": measurement.value,
+                                'measurement': measurement,
+                                'limit_history': limit_history
+                            })
 
-        if 'temperature' in data:
-            try:
-                temperature_sensor = Sensor.objects.get(
-                    device_id=device_id, gas_type_id=6)
-                Measurement.objects.create(
-                    value=data['temperature'],
-                    date=datetime_obj,
-                    sensor=temperature_sensor
-                )
-            except Sensor.DoesNotExist:
-                return Response({"error": "No se encontró el sensor para la temperatura"}, status=status.HTTP_400_BAD_REQUEST)
+                except Sensor.DoesNotExist:
+                    return Response({"error": f"No se encontró el sensor para el gas: {gas}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        self.send_alerts(exceeded_limits)
+            if 'temperature' in data:
+                try:
+                    temperature_sensor = Sensor.objects.get(
+                        device_id=device_id, gas_type_id=6)
+                    Measurement.objects.create(
+                        value=data['temperature'],
+                        date=datetime_obj,
+                        sensor=temperature_sensor
+                    )
+                except Sensor.DoesNotExist:
+                    return Response({"error": "No se encontró el sensor para la temperatura"}, status=status.HTTP_400_BAD_REQUEST)
+
+        self.send_alerts_and_create_notifications(exceeded_limits)
 
         return Response({"detail": "Guardado exitosamente"}, status=status.HTTP_201_CREATED)
 
-    def send_alerts(self, exceeded_limits):
+    def send_alerts_and_create_notifications(self, exceeded_limits):
         for emission_limit, gases in exceeded_limits.items():
-            if emission_limit.email_alert:
-                recipients = self.get_recipients(emission_limit)
+            if emission_limit.email_alert or emission_limit.app_alert:
+                recipients = self.get_recipients(emission_limit) if emission_limit.email_alert else []
                 if recipients:
                     print(recipients)
                     subject = "Alerta de emisión excedida"
                     message = self.create_email_message(emission_limit, gases)
-                    send_mail(subject, message, 'no-reply@tuservicio.com', recipients)
-            
+                    
+                    if emission_limit.email_alert and recipients:
+                        send_mail(subject, message, 'pry20241050@tuservicio.com', recipients)
+
+                    if emission_limit.app_alert:
+                        for gas_info in gases:
+                            Alert.objects.create(
+                                name=f"Alerta de {gas_info['gas']}",
+                                description=message,
+                                measurement=gas_info['measurement'],
+                                limit_history=gas_info['limit_history']
+                            )
+
     def get_recipients(self, emission_limit):
         recipients = set()
         if emission_limit.institution:
-            users = CustomUser.objects.filter(institution=emission_limit.institution)
-            recipients.update(user.email for user in users)
+            users = CustomUser.objects.filter(institution=emission_limit.institution).values_list('email', flat=True)
+            recipients.update(users)
         if emission_limit.management:
-            brickyard_users = CustomUser.objects.filter(brickyard=emission_limit.management.brickyard)
-            institution_users = CustomUser.objects.filter(institution=emission_limit.management.institution)
-            recipients.update(user.email for user in [*brickyard_users, *institution_users])
+            brickyard_users = CustomUser.objects.filter(brickyard=emission_limit.management.brickyard).values_list('email', flat=True)
+            institution_users = CustomUser.objects.filter(institution=emission_limit.management.institution).values_list('email', flat=True)
+            recipients.update([*brickyard_users, *institution_users])
         return list(recipients)
 
     def create_email_message(self, emission_limit, gases):
-        message = f"Se ha superado el límite de emisión '{emission_limit.name}':\n"
+        message = f"Se ha superado el límite de emisión '{emission_limit.name}' para los siguientes gases:\n"
         for gas_info in gases:
-            message += f" - Gas: {gas_info['gas']}, Valor: {gas_info['value']}\n"
+            message += f" * Gas: {gas_info['gas']}, Concentración registrada: {gas_info['value']}\n"
         return message

@@ -58,6 +58,10 @@ class EmissionLimitAdmin(admin.ModelAdmin):
     model = models.EmissionLimit
     list_display = ['id', 'name', 'email_alert', 'app_alert', 'management', 'institution', 'is_default']
     inlines = [LimitHistoryInline]
+    
+class AlertAdmin(admin.ModelAdmin):
+    model = models.Alert
+    list_display = ['id', 'name', 'is_read', 'date']
 
 admin_site.register(models.Brickyard, BrickyardAdmin)
 admin_site.register(models.Institution, InstitutionAdmin)
@@ -68,3 +72,4 @@ admin_site.register(models.Sensor, SensorAdmin)
 admin_site.register(models.Status, StatusAdmin)
 admin_site.register(models.Measurement, MeasurementAdmin)
 admin_site.register(models.EmissionLimit, EmissionLimitAdmin)
+admin_site.register(models.Alert, AlertAdmin)

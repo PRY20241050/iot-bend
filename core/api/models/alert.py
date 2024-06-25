@@ -14,4 +14,6 @@ class Alert(models.Model):
     
     class Meta:
         db_table = 'alerta'
+        verbose_name = 'Alerta'
+        verbose_name_plural = 'Alertas'
         ordering = ['-date']
