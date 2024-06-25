@@ -1,5 +1,6 @@
 from django.db.models import Q, Avg, F
 from django.db.models.functions import Trunc
+from django.core.mail import send_mail
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.response import Response
@@ -7,9 +8,10 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 
-from core.api.models import Status, Measurement, Sensor, GasType
+from core.api.models import Status, Measurement, Sensor, GasType, LimitHistory
 from core.api.serializers import (StatusSerializer, MeasurementSerializer,
                                   MeasurementPaginationSerializer, CreateMeasurementSerializer, MeasurementGroupedPeriodeSerializer)
+from core.users.models import CustomUser
 
 
 class StatusListCreateView(ListAPIView):
@@ -140,22 +142,42 @@ class MeasurementCreateView(CreateAPIView):
         datetime_obj = parse_datetime(datetime_str)
 
         gas_types = {
-            "pm25": 4,
-            "pm10": 5,
             "co": 1,
             "no2": 2,
             "so2": 3,
+            "pm25": 4,
+            "pm10": 5,
         }
+
+        exceeded_limits = {}
 
         for gas, gas_id in gas_types.items():
             try:
                 sensor = Sensor.objects.get(
                     device_id=device_id, gas_type_id=gas_id)
-                Measurement.objects.create(
+                measurement = Measurement.objects.create(
                     value=data[gas],
                     date=datetime_obj,
                     sensor=sensor
                 )
+
+                # Verificar si el valor excede el límite
+                limit_histories = LimitHistory.objects.filter(
+                    gas_type_id=gas_id,
+                    emission_limit__management__brickyard = sensor.device.brickyard
+                )
+                
+                for limit_history in limit_histories:
+                    print(".........")
+                    if measurement.value > limit_history.max_limit:
+                        emission_limit = limit_history.emission_limit
+                        if emission_limit not in exceeded_limits:
+                            exceeded_limits[emission_limit] = []
+                        exceeded_limits[emission_limit].append({
+                            "gas": gas,
+                            "value": measurement.value,
+                        })
+
             except Sensor.DoesNotExist:
                 return Response({"error": f"No se encontró el sensor para el gas: {gas}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -171,4 +193,33 @@ class MeasurementCreateView(CreateAPIView):
             except Sensor.DoesNotExist:
                 return Response({"error": "No se encontró el sensor para la temperatura"}, status=status.HTTP_400_BAD_REQUEST)
 
+        self.send_alerts(exceeded_limits)
+
         return Response({"detail": "Guardado exitosamente"}, status=status.HTTP_201_CREATED)
+
+    def send_alerts(self, exceeded_limits):
+        for emission_limit, gases in exceeded_limits.items():
+            if emission_limit.email_alert:
+                recipients = self.get_recipients(emission_limit)
+                if recipients:
+                    print(recipients)
+                    subject = "Alerta de emisión excedida"
+                    message = self.create_email_message(emission_limit, gases)
+                    send_mail(subject, message, 'no-reply@tuservicio.com', recipients)
+            
+    def get_recipients(self, emission_limit):
+        recipients = set()
+        if emission_limit.institution:
+            users = CustomUser.objects.filter(institution=emission_limit.institution)
+            recipients.update(user.email for user in users)
+        if emission_limit.management:
+            brickyard_users = CustomUser.objects.filter(brickyard=emission_limit.management.brickyard)
+            institution_users = CustomUser.objects.filter(institution=emission_limit.management.institution)
+            recipients.update(user.email for user in [*brickyard_users, *institution_users])
+        return list(recipients)
+
+    def create_email_message(self, emission_limit, gases):
+        message = f"Se ha superado el límite de emisión '{emission_limit.name}':\n"
+        for gas_info in gases:
+            message += f" - Gas: {gas_info['gas']}, Valor: {gas_info['value']}\n"
+        return message
