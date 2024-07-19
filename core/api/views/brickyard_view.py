@@ -3,10 +3,12 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from core.api.models import Brickyard
 from core.api.serializers import BrickyardSerializer
 
+
 class BrickyardListCreateView(ListCreateAPIView):
     queryset = Brickyard.objects.all()
     serializer_class = BrickyardSerializer
     permission_classes = [IsAuthenticated]
+
 
 class BrickyardRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     queryset = Brickyard.objects.all()

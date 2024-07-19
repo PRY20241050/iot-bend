@@ -24,56 +24,64 @@ class LimitHistoryInline(admin.TabularInline):
 
 class BrickyardAdmin(admin.ModelAdmin):
     model = models.Brickyard
-    list_display = ['name', 'address', 'ruc', 'phone', 'contact']
+    list_display = ["name", "address", "ruc", "phone", "contact"]
 
 
 class InstitutionAdmin(admin.ModelAdmin):
     model = models.Institution
-    list_display = ['name', 'address', 'phone', 'contact']
+    list_display = ["name", "address", "phone", "contact"]
     inlines = [ManagementInline]
 
 
 class ManagementAdmin(admin.ModelAdmin):
     model = models.Management
-    list_display = ['institution', 'brickyard']
+    list_display = ["institution", "brickyard"]
 
 
 class DeviceAdmin(admin.ModelAdmin):
     model = models.Device
-    list_display = ['id', 'name', 'status', 'battery_level', 'brickyard']
+    list_display = ["id", "name", "status", "battery_level", "brickyard"]
     inlines = [SensorInline]
 
 
 class GasTypeAdmin(admin.ModelAdmin):
     model = models.GasType
-    list_display = ['id', 'name', 'abbreviation']
+    list_display = ["id", "name", "abbreviation"]
 
 
 class SensorAdmin(admin.ModelAdmin):
     model = models.Sensor
-    list_display = ['id', 'device', 'gas_type']
+    list_display = ["id", "device", "gas_type"]
     inlines = [MeasurementInline]
 
 
 class StatusAdmin(admin.ModelAdmin):
     model = models.Status
-    list_display = ['name']
+    list_display = ["name"]
 
 
 class MeasurementAdmin(admin.ModelAdmin):
     model = models.Measurement
-    list_display = ['id', 'sensor', 'status', 'value', 'date']
+    list_display = ["id", "sensor", "status", "value", "date"]
 
 
 class EmissionLimitAdmin(admin.ModelAdmin):
     model = models.EmissionLimit
-    list_display = ['id', 'name', 'email_alert', 'app_alert', 'management', 'institution', 'is_default']
+    list_display = [
+        "id",
+        "name",
+        "email_alert",
+        "app_alert",
+        "management",
+        "institution",
+        "is_default",
+    ]
     inlines = [LimitHistoryInline]
 
 
 class AlertAdmin(admin.ModelAdmin):
     model = models.Alert
-    list_display = ['id', 'name', 'is_read', 'date']
+    list_display = ["id", "name", "is_read", "date"]
 
 
 admin.site.register(models.Brickyard, BrickyardAdmin)
@@ -86,4 +94,3 @@ admin.site.register(models.Status, StatusAdmin)
 admin.site.register(models.Measurement, MeasurementAdmin)
 admin.site.register(models.EmissionLimit, EmissionLimitAdmin)
 admin.site.register(models.Alert, AlertAdmin)
-

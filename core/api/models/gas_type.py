@@ -1,16 +1,17 @@
 from django.db import models
 
-class GasType(models.Model):
-    name = models.CharField(max_length=100, blank=False, verbose_name='Nombre')
-    abbreviation = models.CharField(max_length=10, blank=False, verbose_name='Abreviatura')
 
-    last_update = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
+class GasType(models.Model):
+    name = models.CharField(max_length=100, blank=False, verbose_name="Nombre")
+    abbreviation = models.CharField(max_length=10, blank=False, verbose_name="Abreviatura")
+
+    last_update = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
 
     def __str__(self):
         return self.name
-    
+
     class Meta:
-        db_table = 'tipo_gas'
-        verbose_name = 'Tipo de gas'
-        verbose_name_plural = 'Tipos de gas'
+        db_table = "tipo_gas"
+        verbose_name = "Tipo de gas"
+        verbose_name_plural = "Tipos de gas"

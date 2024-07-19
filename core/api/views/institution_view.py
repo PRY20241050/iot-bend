@@ -3,13 +3,14 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from core.api.models import Institution
 from core.api.serializers import InstitutionSerializer
 
+
 class InstitutionListCreateView(ListCreateAPIView):
     queryset = Institution.objects.all()
     serializer_class = InstitutionSerializer
     permission_classes = [IsAuthenticated]
 
+
 class InstitutionRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     queryset = Institution.objects.all()
     serializer_class = InstitutionSerializer
     permission_classes = [IsAuthenticated]
-

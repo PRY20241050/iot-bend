@@ -5,30 +5,35 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    replaces = [('users', '0002_alter_customuser_options_and_more'), ('users', '0003_alter_customuser_email_alter_customuser_role'), ('users', '0004_alter_customuser_role'), ('users', '0005_alter_customuser_role')]
+    replaces = [
+        ("users", "0002_alter_customuser_options_and_more"),
+        ("users", "0003_alter_customuser_email_alter_customuser_role"),
+        ("users", "0004_alter_customuser_role"),
+        ("users", "0005_alter_customuser_role"),
+    ]
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='customuser',
-            options={'verbose_name': 'Usuario', 'verbose_name_plural': 'Usuarios'},
+            name="customuser",
+            options={"verbose_name": "Usuario", "verbose_name_plural": "Usuarios"},
         ),
         migrations.RenameField(
-            model_name='customuser',
-            old_name='user_type',
-            new_name='role',
+            model_name="customuser",
+            old_name="user_type",
+            new_name="role",
         ),
         migrations.AlterField(
-            model_name='customuser',
-            name='email',
-            field=models.EmailField(max_length=254, unique=True, verbose_name='email address'),
+            model_name="customuser",
+            name="email",
+            field=models.EmailField(max_length=254, unique=True, verbose_name="email address"),
         ),
         migrations.AlterField(
-            model_name='customuser',
-            name='role',
-            field=models.CharField(blank=True, default='', max_length=50),
+            model_name="customuser",
+            name="role",
+            field=models.CharField(blank=True, default="", max_length=50),
         ),
     ]
