@@ -3,7 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Constants
 IS_TRUE = ['True', 'true', '1']
@@ -13,10 +13,10 @@ load_dotenv(BASE_DIR / 'environments' / '.env')
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG', 'False') in IS_TRUE
+DEBUG = os.getenv('DEBUG', 'True') in IS_TRUE
 PRODUCTION = os.getenv('PRODUCTION', 'False') in IS_TRUE
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -25,26 +25,25 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.sitemaps',
+]
 
-    # Third-party apps
-    'django_browser_reload',
-    'debug_toolbar',
+THIRD_PARTY_APPS = [
     'django_extensions',
     'rest_framework',
     'rest_framework_simplejwt',
-    'corsheaders',
+]
 
-    # Local apps
+APPS = [
     'core.api',
     'core.users',
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + APPS
 
 SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -54,7 +53,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     # Third-party middleware
-    'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -113,25 +111,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# CORS settings
-# https://pypi.org/project/django-cors-headers/
+# Allowing hosts
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS',
                           'database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app').split(' ')
-
-ALLOWED_HOSTS_CORS = [
-    f'http://{host}' if not host.startswith(('http://', 'https://')) else host
-    for host in ALLOWED_HOSTS if host not in ('*', 'localhost', '127.0.0.1', '[::1]')
-]
-
-ALLOWED_HOSTS_CORS.extend([
-    'http://localhost', 'https://localhost',
-    'http://127.0.0.1', 'https://127.0.0.1',
-    'http://[::1]', 'https://[::1]',
-])
-
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ALLOWED_HOSTS_CORS
 
 # JWT settings
 
@@ -155,19 +138,7 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') in IS_TRUE
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-    BASE_DIR / 'media',
-]
-
-STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_ROOT = BASE_DIR / 'mediafiles'
+# Whitenoise settings
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

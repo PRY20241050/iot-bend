@@ -6,7 +6,7 @@
   2. Initialize the virtual environment and install the project dependencies.
       ```bash
       venv/Scripts/activate
-      pip install -r requirements.txt
+      pip install -r requirements/dev.txt
       ```
 ### Environment variables
 Create a .env file in the environments folder with the variables described in the `.env.template` file.
