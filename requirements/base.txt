@@ -18,3 +18,7 @@ mypy-extensions==1.0.0
 packaging==24.1
 pathspec==0.12.1
 platformdirs==4.2.2
+
+# Testing and delete
+django-browser-reload==1.12.1
+django-debug-toolbar==4.4.2
