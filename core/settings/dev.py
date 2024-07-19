@@ -13,7 +13,6 @@ DEV_APPS = []
 
 INSTALLED_APPS += DEV_DJANGO_APPS + DEV_THIRD_PARTY_APPS + DEV_APPS
 
-MIDDLEWARE.insert(1, "corsheaders.middleware.CorsMiddleware")
 MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
 MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
 
