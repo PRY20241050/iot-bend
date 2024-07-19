@@ -1,10 +1,67 @@
 # IoT Monitoring Bend
 
-## Initialize the project locally
+## Description
+This project is an API for air quality monitoring through sensors connected in an IoT network.
+The project is developed using Django and Django REST Framework.
+
+## Table of Contents
+- [Description](#description)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+  - [Linux](#linux)
+  - [Windows](#windows)
+- [Virtual Environment](#create-a-virtual-environment-for-the-project-and-initialize)
+- [Environment Variables](#environment-variables)
+- [Create Admin Superuser](#create-an-admin-superuser)
+- [Migrations](#prepare-and-apply-data-migrations)
+- [Initialize Server](#initialize-the-server)
+- [Access Admin Panel](#access-the-admin-panel)
+- [Authors](#authors)
+
+## Requirements
+- Python 3.10
+
+## Quick start
+Run the following command to start the project.
+- Linux:
+  ```bash
+  # Create a virtual environment
+  python3 -m venv venv
+  # Activate the virtual environment
+  source venv/bin/activate
+  # Install the project dependencies
+  pip install -r requirements/dev.txt
+  # Copy the .env file
+  cp environments/.env.template environments/.env
+  # Apply the migrations
+  python manage.py makemigrations
+  python manage.py migrate
+  # Initialize the server
+  python manage.py runserver
+  ```
+- Windows:
+  ```bash
+  # Create a virtual environment
+  py -m venv venv
+  # Activate the virtual environment
+  venv/Scripts/activate
+  # Install the project dependencies
+  pip install -r requirements/dev.txt
+  # Copy the .env file
+  copy environments/.env.template environments/.env
+  # Apply the migrations
+  py manage.py makemigrations
+  py manage.py migrate
+  # Initialize the server
+  py manage.py runserver
+  ```
+
 ### Create a virtual environment for the project and initialize
-  1. Execute `py -m venv venv` to create the environment.
-  2. Initialize the virtual environment and install the project dependencies.
+  1. Create a virtual environment in the project folder.
+  2. Initialize the virtual environment.
+  3. Install the project dev dependencies.
       ```bash
+      py -m venv venv
       venv/Scripts/activate
       pip install -r requirements/dev.txt
       ```
@@ -12,20 +69,30 @@
 Create a .env file in the environments folder with the variables described in the `.env.template` file.
 
 ### Create an admin superuser
-To modify the website from the administration panel you need to create a superuser. ```python manage.py createsuperuser```
+To modify the website from the admin panel you need to create a superuser. ```python manage.py createsuperuser```
 
 For more information consult [How to create superuser in Django?](https://www.geeksforgeeks.org/how-to-create-superuser-in-django/)
 
 ### Prepare and apply data migrations
+To apply the migrations to the database you need to execute the following commands.
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### To initialize the project you need to start the server to see the changes.
+### Initialize the server
+To initialize the server you need to execute the following command.
   1. Activate the virtual environment ```venv/Scripts/activate```
-  2. Execute 
+  2. Initialize the server
   ```bash
+  venv/Scripts/activate
   python manage.py runserver
   ```
   By default, the server is initialized to `http://127.0.0.1:8000/`
+
+### Access the admin panel
+To access the admin panel you need to go to `http://127.0.0.1:8000/admin/` and log in with the superuser credentials.
+
+## Authors
+- [Alejandro Medrano](https://github.com/havuh)
+- [Rogger Barrientos](https://github.com/RoggerG-hub)
