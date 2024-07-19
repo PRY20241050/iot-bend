@@ -15,11 +15,13 @@ MIDDLEWARE.insert(1, "corsheaders.middleware.CorsMiddleware")
 # CORS settings
 # https://pypi.org/project/django-cors-headers/
 
-ALLOWED_HOSTS_CORS = [
-    f"http://{host}" if not host.startswith(("http://", "https://")) else host
-    for host in ALLOWED_HOSTS
-    if host not in ("*", "localhost", "127.0.0.1", "[::1]")
-]
+ALLOWED_HOSTS_CORS = ALLOWED_HOSTS
+#
+# ALLOWED_HOSTS_CORS = [
+#     f"http://{host}" if not host.startswith(("http://", "https://")) else host
+#     for host in ALLOWED_HOSTS
+#     if host not in ("*", "localhost", "127.0.0.1", "[::1]")
+# ]
 
 ALLOWED_HOSTS_CORS.extend(
     [
