@@ -1,19 +1,20 @@
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
-import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Constants
+IS_TRUE = ['True', 'true', '1']
 
 # Load environment variables
 load_dotenv(BASE_DIR / 'environments' / '.env')
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG', 'False') in ['True', 'true', '1']
-PRODUCTION = os.getenv('PRODUCTION', 'False') in ['True', 'true', '1']
-
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app').split(' ')
+DEBUG = os.getenv('DEBUG', 'False') in IS_TRUE
+PRODUCTION = os.getenv('PRODUCTION', 'False') in IS_TRUE
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,6 +44,7 @@ SITE_ID = 1
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -52,7 +54,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     # Third-party middleware
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
@@ -77,6 +78,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
+# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -86,31 +88,6 @@ DATABASES = {
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
     }
-}
-
-# TOKENS SETTINGS
-
-# Custom User Model
-# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/#substituting-a-custom-user-model
-
-AUTH_USER_MODEL = 'users.CustomUser'
-
-# CORS settings
-# https://pypi.org/project/django-cors-headers/
-
-# CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = os.getenv('ALLOWED_HOSTS', 'database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app').split(' ')
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
 }
 
 # Password validation
@@ -131,12 +108,50 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Custom User Model
+# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/#substituting-a-custom-user-model
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
+# CORS settings
+# https://pypi.org/project/django-cors-headers/
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS',
+                          'database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app').split(' ')
+
+ALLOWED_HOSTS_CORS = [
+    f'http://{host}' if not host.startswith(('http://', 'https://')) else host
+    for host in ALLOWED_HOSTS if host not in ('*', 'localhost', '127.0.0.1', '[::1]')
+]
+
+ALLOWED_HOSTS_CORS.extend([
+    'http://localhost', 'https://localhost',
+    'http://127.0.0.1', 'https://127.0.0.1',
+    'http://[::1]', 'https://[::1]',
+])
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = ALLOWED_HOSTS_CORS
+
+# JWT settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
+}
+
 # Email settings
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') in ['True', 'true', '1']
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') in IS_TRUE
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
@@ -156,12 +171,6 @@ MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -172,3 +181,8 @@ TIME_ZONE = 'America/Lima'
 USE_I18N = True
 
 USE_TZ = True
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
