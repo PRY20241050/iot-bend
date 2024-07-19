@@ -1,5 +1,7 @@
 from .common import *
 
+PRODUCTION = True
+
 PROD_DJANGO_APPS = []
 
 PROD_THIRD_PARTY_APPS = [
