@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "core/wsgi.prod.py",
+      "src": "build_files.sh",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
@@ -10,7 +10,7 @@
       }
     },
     {
-      "src": "build_files.sh",
+      "src": "core/wsgi.prod.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
