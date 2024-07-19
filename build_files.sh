@@ -1,3 +1,7 @@
 #!/bin/bash
-python3.10 -m pip install -r requirements/prod.txt
-python3.10 manage.py collectstatic --noinput
+echo "Python version:"
+python --version
+echo "Pip version:"
+python -m pip --version
+python -m pip install -r requirements/prod.txt
+python manage.py collectstatic --noinput
