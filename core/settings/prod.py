@@ -29,6 +29,7 @@ ALLOWED_HOSTS_CORS.extend(
         "https://127.0.0.1",
         "http://[::1]",
         "https://[::1]",
+        ".vercel.app",
     ]
 )
 
