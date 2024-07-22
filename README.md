@@ -10,19 +10,14 @@ The project is developed using Django and Django REST Framework.
 - [Quick start](#quick-start)
   - [Linux](#linux)
   - [Windows](#windows)
-- [Virtual Environment](#create-a-virtual-environment-for-the-project-and-initialize)
-- [Environment Variables](#environment-variables)
-- [Create Admin Superuser](#create-an-admin-superuser)
-- [Migrations](#prepare-and-apply-data-migrations)
 - [Initialize Server](#initialize-the-server)
-- [Access Admin Panel](#access-the-admin-panel)
 - [Authors](#authors)
 
 ## Requirements
 - Python 3.10
 
 ## Quick start
-Run the following command to start the project.
+If you need to run the project locally, you can follow the steps below.
 - Linux:
   ```bash
   # Create a virtual environment
@@ -56,30 +51,6 @@ Run the following command to start the project.
   py manage.py runserver
   ```
 
-### Create a virtual environment for the project and initialize
-  1. Create a virtual environment in the project folder.
-  2. Initialize the virtual environment.
-  3. Install the project dev dependencies.
-      ```bash
-      py -m venv venv
-      venv/Scripts/activate
-      pip install -r requirements/dev.txt
-      ```
-### Environment variables
-Create a .env file in the environments folder with the variables described in the `.env.template` file.
-
-### Create an admin superuser
-To modify the website from the admin panel you need to create a superuser. ```python manage.py createsuperuser```
-
-For more information consult [How to create superuser in Django?](https://www.geeksforgeeks.org/how-to-create-superuser-in-django/)
-
-### Prepare and apply data migrations
-To apply the migrations to the database you need to execute the following commands.
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
 ### Initialize the server
 To initialize the server you need to execute the following command.
   1. Activate the virtual environment ```venv/Scripts/activate```
@@ -89,9 +60,6 @@ To initialize the server you need to execute the following command.
   python manage.py runserver
   ```
   By default, the server is initialized to `http://127.0.0.1:8000/`
-
-### Access the admin panel
-To access the admin panel you need to go to `http://127.0.0.1:8000/admin/` and log in with the superuser credentials.
 
 ## Authors
 - [Alejandro Medrano](https://github.com/havuh)

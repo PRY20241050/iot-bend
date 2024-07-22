@@ -9,7 +9,11 @@ admin.site.site_header = _(ADMIN_TITLE)
 admin.site.site_title = _(ADMIN_TITLE)
 admin.site.index_title = _("Bienvenido al %s" % ADMIN_TITLE)
 
-urlpatterns = [path("admin/", admin.site.urls), path("api/", include("core.api.urls"))]
+# fmt: off
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("api/", include("core.api.urls"))
+]
 
 if not settings.PRODUCTION:
     from django.conf.urls.static import static
