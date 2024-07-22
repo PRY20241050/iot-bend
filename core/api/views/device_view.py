@@ -1,11 +1,7 @@
 from core.api.models import Device
 from core.api.serializers import DeviceSerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    ListAPIView,
-)
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 
 class DeviceListCreateView(ListCreateAPIView):
