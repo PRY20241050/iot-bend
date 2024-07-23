@@ -52,5 +52,5 @@ STATICFILES_DIRS = [
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = BASE_DIR.parent / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "mediafiles"

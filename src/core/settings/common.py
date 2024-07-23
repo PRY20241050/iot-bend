@@ -9,12 +9,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 IS_TRUE = ["True", "true", "1"]
 
 # Load environment variables
-load_dotenv(BASE_DIR / "environments" / ".env")
-
+load_dotenv(BASE_DIR.parent / "environments" / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG", "True") in IS_TRUE
 PRODUCTION = os.getenv("PRODUCTION", "False") in IS_TRUE
+
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app",
+).split(" ")
 
 DJANGO_APPS = [
     "django.contrib.admin",
@@ -87,6 +91,11 @@ DATABASES = {
     }
 }
 
+# Custom User Model
+# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/#substituting-a-custom-user-model
+
+AUTH_USER_MODEL = "users.CustomUser"
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -104,18 +113,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
-# Custom User Model
-# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/#substituting-a-custom-user-model
-
-AUTH_USER_MODEL = "users.CustomUser"
-
-# Allowing hosts
-
-ALLOWED_HOSTS = os.getenv(
-    "ALLOWED_HOSTS",
-    "database-iot-pry20241050.clguogmy6dz7.us-east-2.rds.amazonaws.com .vercel.app",
-).split(" ")
 
 # JWT settings
 
