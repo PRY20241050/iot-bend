@@ -1,8 +1,14 @@
 from django.urls import path, include
 from . import views
 
-urlpatterns = [
+
+# Users URLs
+users_patterns = [
     path("", include("core.users.urls")),
+]
+
+# Brickyards URLs
+brickyards_patterns = [
     path(
         "brickyards/",
         views.BrickyardListCreateView.as_view(),
@@ -13,6 +19,10 @@ urlpatterns = [
         views.BrickyardRetrieveUpdateDestroyView.as_view(),
         name="brickyard-detail",
     ),
+]
+
+# Institutions URLs
+institutions_patterns = [
     path(
         "institution/",
         views.InstitutionListCreateView.as_view(),
@@ -33,6 +43,10 @@ urlpatterns = [
         views.add_multiple_brickyards_to_institution,
         name="add-brickyards-to-institution",
     ),
+]
+
+# Devices URLs
+devices_patterns = [
     # using (params: brickyard_id)
     path("devices/", views.DeviceListCreateView.as_view(), name="device-list-create"),
     # using
@@ -47,12 +61,20 @@ urlpatterns = [
         views.SensorLastMeasurementView.as_view(),
         name="sensor_last_measurements",
     ),
+]
+
+# Gases URLs
+gases_patterns = [
     path("gases/", views.GasTypeListCreateView.as_view(), name="gas-list-create"),
     path(
         "gases/<int:pk>/",
         views.GasTypeRetrieveUpdateDestroyView.as_view(),
         name="gas-detail",
     ),
+]
+
+# Sensors URLs
+sensors_patterns = [
     path("sensors/", views.SensorListCreateView.as_view(), name="sensor-list-create"),
     path(
         "sensors/<int:pk>/",
@@ -64,12 +86,20 @@ urlpatterns = [
         views.SensorsByDeviceView.as_view(),
         name="sensors-by-device",
     ),
+]
+
+# Status URLs
+status_patterns = [
     path("status/", views.StatusListCreateView.as_view(), name="status-list-create"),
     path(
         "status/<int:pk>/",
         views.StatusRetrieveUpdateDestroyView.as_view(),
         name="status-detail",
     ),
+]
+
+# Measurements URLs
+measurements_patterns = [
     path("measurements/", views.MeasurementListView.as_view(), name="measurement-list"),
     path(
         "measurements/create/",
@@ -92,6 +122,10 @@ urlpatterns = [
         views.MeasurementPaginatedListView.as_view(),
         name="measurement-paginated-list",
     ),
+]
+
+# Emission Limits URLs
+emission_limits_patterns = [
     path(
         "emission_limits/",
         views.EmissionLimitListCreateView.as_view(),
@@ -107,6 +141,10 @@ urlpatterns = [
         views.EmissionLimitByManagementView.as_view(),
         name="emission-limits-by-management",
     ),
+]
+
+# Limit History URLs
+limit_history_patterns = [
     path(
         "limit_history/",
         views.LimitHistoryListCreateView.as_view(),
@@ -123,3 +161,16 @@ urlpatterns = [
         name="limit-history-by-emission-limit",
     ),
 ]
+
+urlpatterns = (
+    users_patterns
+    + brickyards_patterns
+    + institutions_patterns
+    + devices_patterns
+    + gases_patterns
+    + sensors_patterns
+    + status_patterns
+    + measurements_patterns
+    + emission_limits_patterns
+    + limit_history_patterns
+)
