@@ -33,14 +33,13 @@ institutions_patterns = [
         views.InstitutionRetrieveUpdateDestroyView.as_view(),
         name="institution-detail",
     ),
-    path(
-        "institution/<int:institution_id>/brickyard/<int:brickyard_id>/",
-        views.add_brickyard_to_institution,
-        name="add-brickyard-to-institution",
-    ),
+]
+
+# Management URLs
+management_patterns = [
     path(
         "institution/<int:institution_id>/add_brickyards/",
-        views.add_multiple_brickyards_to_institution,
+        views.ManagementListCreateView.as_view(),
         name="add-brickyards-to-institution",
     ),
 ]
@@ -157,7 +156,7 @@ limit_history_patterns = [
     ),
     path(
         "emission_limit/<int:emission_limit_id>/limit_history/",
-        views.LimitHistorysByEmissionLimitView.as_view(),
+        views.LimitHistoryByEmissionLimitView.as_view(),
         name="limit-history-by-emission-limit",
     ),
 ]
@@ -166,6 +165,7 @@ urlpatterns = (
     users_patterns
     + brickyards_patterns
     + institutions_patterns
+    + management_patterns
     + devices_patterns
     + gases_patterns
     + sensors_patterns

@@ -4,8 +4,7 @@ from .institution_view import (
     InstitutionRetrieveUpdateDestroyView,
 )
 from .management_view import (
-    add_brickyard_to_institution,
-    add_multiple_brickyards_to_institution,
+    ManagementListCreateView,
 )
 from .device_view import DeviceListCreateView, DeviceRetrieveUpdateDestroyView
 from .gas_type_view import GasTypeListCreateView, GasTypeRetrieveUpdateDestroyView
@@ -32,5 +31,5 @@ from .emission_limit_view import (
 from .limit_history_view import (
     LimitHistoryListCreateView,
     LimitHistoryRetrieveUpdateDestroyView,
-    LimitHistorysByEmissionLimitView,
+    LimitHistoryByEmissionLimitView,
 )

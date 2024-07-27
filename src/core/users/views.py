@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from core.emails import send_html_email
-from core.utils.response import create_response
+from core.utils.response import custom_response
 from .tokens import account_activation_token
 from .serializers import (
     UserSerializer,
@@ -27,7 +27,7 @@ class UserRegisterView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return create_response(status_code=status.HTTP_201_CREATED, user=serializer.data)
+        return custom_response(status_code=status.HTTP_201_CREATED, user=serializer.data)
 
 
 class UserDetailView(RetrieveUpdateAPIView):
@@ -48,19 +48,19 @@ class ChangePasswordView(CreateAPIView):
 
         user = request.user
         if not user.check_password(serializer.data.get("old_password")):
-            return create_response(
+            return custom_response(
                 "Contraseña incorrecta.", status_code=status.HTTP_400_BAD_REQUEST
             )
 
         if serializer.data.get("old_password") == serializer.data.get("new_password"):
-            return create_response(
+            return custom_response(
                 "La nueva contraseña no puede ser igual a la anterior.",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         user.set_password(serializer.data.get("new_password"))
         user.save()
-        return create_response("La contraseña se cambió con éxito.")
+        return custom_response("La contraseña se cambió con éxito.")
 
 
 class PasswordResetView(CreateAPIView):
@@ -76,7 +76,7 @@ class PasswordResetView(CreateAPIView):
 
         self._send_reset_email(user)
 
-        return create_response("Correo electrónico enviado", status_code=status.HTTP_200_OK)
+        return custom_response("Correo electrónico enviado")
 
     @staticmethod
     def _send_reset_email(user):
@@ -104,15 +104,15 @@ class PasswordResetConfirmView(APIView):
 
         user = self.get_user_by_id(uid)
         if user is None:
-            return create_response("Usuario inválido", status_code=status.HTTP_400_BAD_REQUEST)
+            return custom_response("Usuario inválido", status.HTTP_400_BAD_REQUEST)
 
         if not account_activation_token.check_token(user, token):
-            return create_response("Token inválido", status_code=status.HTTP_400_BAD_REQUEST)
+            return custom_response("Token inválido", status.HTTP_400_BAD_REQUEST)
 
         user.set_password(serializer.data["new_password"])
         user.save()
 
-        return create_response("Contraseña restablecida")
+        return custom_response("Contraseña restablecida")
 
     @staticmethod
     def get_user_by_id(uid):

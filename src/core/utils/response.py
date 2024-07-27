@@ -2,10 +2,15 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-def create_response(detail: str = None, status_code=status.HTTP_200_OK, **kwargs):
-    if detail is None:
+def custom_response(
+    message: str = None, status_code=status.HTTP_200_OK, key: str = "detail", **kwargs
+):
+    if message is None:
         return Response(kwargs, status=status_code)
 
-    response_data = {"detail": detail}
+    if status_code != status.HTTP_200_OK or status_code != status.HTTP_201_CREATED:
+        key = "error"
+
+    response_data = {key: message}
     response_data.update(kwargs)
     return Response(response_data, status=status_code)

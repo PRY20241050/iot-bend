@@ -28,6 +28,7 @@ class SensorWithLastMeasurementSerializer(serializers.ModelSerializer):
         model = Sensor
         fields = "__all__"
 
+    @staticmethod
     def get_last_measurement(self, obj):
         last_measurement = obj.measurement_set.order_by("-date").first()
         if last_measurement:

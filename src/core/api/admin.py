@@ -24,12 +24,12 @@ class LimitHistoryInline(admin.TabularInline):
 
 class BrickyardAdmin(admin.ModelAdmin):
     model = models.Brickyard
-    list_display = ["name", "address", "ruc", "phone", "contact"]
+    list_display = ["id", "name", "address", "ruc", "phone", "contact"]
 
 
 class InstitutionAdmin(admin.ModelAdmin):
     model = models.Institution
-    list_display = ["name", "address", "phone", "contact"]
+    list_display = ["id", "name", "address", "phone", "contact"]
     inlines = [ManagementInline]
 
 

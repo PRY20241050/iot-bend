@@ -9,18 +9,30 @@ from core.api.serializers import LimitHistorySerializer
 
 
 class LimitHistoryListCreateView(ListCreateAPIView):
+    """
+    Handle GET and POST requests for limit history data.
+    """
+
     queryset = LimitHistory.objects.all()
     serializer_class = LimitHistorySerializer
     permission_classes = [IsAuthenticated]
 
 
 class LimitHistoryRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    """
+    Handle GET, PUT, PATCH, and DELETE requests for a single limit history.
+    """
+
     queryset = LimitHistory.objects.all()
     serializer_class = LimitHistorySerializer
     permission_classes = [IsAuthenticated]
 
 
-class LimitHistorysByEmissionLimitView(ListAPIView):
+class LimitHistoryByEmissionLimitView(ListAPIView):
+    """
+    Handle GET requests for limit history by emission limit ID.
+    """
+
     serializer_class = LimitHistorySerializer
     permission_classes = [IsAuthenticated]
 
