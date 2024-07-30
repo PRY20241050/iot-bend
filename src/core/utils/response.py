@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils.translation import gettext_lazy as _
 
 
 def custom_response(
@@ -11,6 +12,6 @@ def custom_response(
     if status_code not in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
         key = "error"
 
-    response_data = {key: message}
+    response_data = {key: _(message)}
     response_data.update(kwargs)
     return Response(response_data, status=status_code)

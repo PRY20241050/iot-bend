@@ -1,16 +1,18 @@
 import os
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from rest_framework_simplejwt.views import TokenObtainPairView
 from core.emails import send_html_email
 from core.utils.response import custom_response
 from .tokens import account_activation_token
 from .serializers import (
     UserSerializer,
+    LoginSerializer,
     ChangePasswordSerializer,
     PasswordResetSerializer,
     SetNewPasswordSerializer,
@@ -36,6 +38,10 @@ class UserDetailView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class LoginView(TokenObtainPairView):
+    serializer_class = LoginSerializer
 
 
 class ChangePasswordView(CreateAPIView):
