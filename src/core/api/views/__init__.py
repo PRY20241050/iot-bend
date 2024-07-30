@@ -15,8 +15,6 @@ from .sensor_view import (
     SensorLastMeasurementView,
 )
 from .measurement_view import (
-    StatusListView,
-    StatusRetrieveUpdateDestroyView,
     MeasurementCreateView,
     MeasurementRetrieveUpdateDestroyView,
     MeasurementBySensorView,
@@ -33,3 +31,4 @@ from .limit_history_view import (
     LimitHistoryRetrieveUpdateDestroyView,
     LimitHistoryByEmissionLimitView,
 )
+from .status_view import StatusListView, StatusRetrieveUpdateDestroyView

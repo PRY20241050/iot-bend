@@ -14,16 +14,21 @@ class DeviceListCreateView(ListCreateAPIView):
     queryset = Device.objects.all()
 
     def get_queryset(self):
+        params = self.get_query_params()
+
+        if params["brickyard_id"] is not None:
+            return self.queryset.filter(brickyard_id=params["brickyard_id"])
+        return self.queryset.all()
+
+    def get_query_params(self):
         """
         Query Parameters:
         - brickyard_id (int): Filter devices by brickyard ID.
         """
+
         query_params = self.request.query_params
 
-        brickyard_id = query_params.get("brickyard_id")
-        if brickyard_id is not None:
-            return self.queryset.filter(brickyard_id=brickyard_id)
-        return self.queryset.all()
+        return {"brickyard_id": query_params.get("brickyard_id")}
 
 
 class DeviceRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):

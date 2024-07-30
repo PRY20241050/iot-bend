@@ -7,9 +7,8 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAuthenticated
 from core.api.pagination import GenericPagination
-from core.api.models import Status, Measurement, Alert
+from core.api.models import Measurement, Alert
 from core.api.serializers import (
-    StatusSerializer,
     MeasurementSerializer,
     MeasurementPaginationSerializer,
     CreateMeasurementSerializer,
@@ -165,21 +164,3 @@ class MeasurementAPICreateView(CreateAPIView):
             recipients.update([*brickyard_users, *institution_users])
 
         return list(recipients)
-
-
-class StatusListView(ListAPIView):
-    """
-    Handle GET requests for status data.
-    """
-
-    queryset = Status.objects.all()
-    serializer_class = StatusSerializer
-
-
-class StatusRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    """
-    Handle GET, PUT, PATCH, and DELETE requests for a single status.
-    """
-
-    queryset = Status.objects.all()
-    serializer_class = StatusSerializer

@@ -17,29 +17,34 @@ class EmissionLimitListCreateView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        params = self.get_query_params()
+        queryset = EmissionLimit.objects.all()
+
+        if params["is_default"] is not None:
+            queryset = queryset.filter(is_default=params["is_default"])
+
+        if params["is_institution"] is not None:
+            queryset = queryset.filter(institution__isnull=False)
+
+        if params["is_management"] is not None:
+            queryset = queryset.filter(management__isnull=False)
+
+        return queryset
+
+    def get_query_params(self):
         """
         Query Parameters:
         - is_default        (bool): Return only default emission limits.
         - is_institution    (bool): Return only emission limits that are associated with an institution.
         - is_management     (bool): Return only emission limits that are associated with a management.
         """
-        queryset = EmissionLimit.objects.all()
+
         query_params = self.request.query_params
-
-        is_default = query_params.get("is_default")
-        is_institution = query_params.get("is_institution")
-        is_management = query_params.get("is_management")
-
-        if is_default is not None:
-            queryset = queryset.filter(is_default=is_default)
-
-        if is_institution is not None:
-            queryset = queryset.filter(institution__isnull=False)
-
-        if is_management is not None:
-            queryset = queryset.filter(management__isnull=False)
-
-        return queryset
+        return {
+            "is_default": query_params.get("is_default"),
+            "is_institution": query_params.get("is_institution"),
+            "is_management": query_params.get("is_management"),
+        }
 
 
 class EmissionLimitByManagementView(ListAPIView):
