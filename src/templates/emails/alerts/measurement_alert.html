@@ -1,0 +1,8 @@
+{% autoescape off %}
+    Se ha superado el límite de emisión "{{ emission_limit.name }}" para los siguientes gases:
+    <ul>
+        {% for gas_info in gases %}
+            <li>Gas: {{ gas_info.gas }}. Concentración registrada: {{ gas_info.value }}</li>
+        {% endfor %}
+    </ul>
+{% endautoescape %}

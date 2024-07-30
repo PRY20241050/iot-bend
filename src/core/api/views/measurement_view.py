@@ -1,7 +1,6 @@
 from django.db import transaction
 from django.db.models import Q, Avg, F
 from django.db.models.functions import Trunc
-from django.core.mail import send_mail
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.generics import (
@@ -23,6 +22,7 @@ from core.api.serializers import (
 from core.users.models import CustomUser
 from core.utils import split_string
 from core.utils.response import custom_response
+from core.emails import send_html_email
 
 
 class MeasurementCreateView(CreateAPIView):
@@ -247,13 +247,18 @@ class MeasurementAPICreateView(CreateAPIView):
             recipients = self.get_recipients(emission_limit) if emission_limit.email_alert else []
 
             for recipient in recipients:
-                subject = "Alerta de Límite de Emisión Excedido"
-                message = self.create_email_message(emission_limit, gases)
-
                 if emission_limit.email_alert:
-                    send_mail(subject, message, "no-reply@tuservicio.com", [recipient.email])
+                    subject = "Alerta de Límite de Emisión Excedido"
+                    send_html_email(
+                        subject,
+                        recipient.email,
+                        "emails/alerts/measurement_alert.html",
+                        {"emission_limit": emission_limit, "gases": gases},
+                    )
 
                 if emission_limit.app_alert:
+                    message = self.create_email_message(emission_limit, gases)
+
                     Alert.objects.create(
                         name=f"Alerta de {emission_limit.name}",
                         description=message,

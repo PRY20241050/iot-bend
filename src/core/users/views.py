@@ -86,7 +86,7 @@ class PasswordResetView(CreateAPIView):
         send_html_email(
             "Restablecer contraseña",
             user.email,
-            "auth/password_reset_email.html",
+            "emails/auth/password_reset.html",
             {
                 "user": user,
                 "reset_link": reset_link,
