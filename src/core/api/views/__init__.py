@@ -17,10 +17,10 @@ from .sensor_view import (
 from .measurement_view import (
     StatusListCreateView,
     StatusRetrieveUpdateDestroyView,
-    MeasurementListView,
+    MeasurementCreateView,
     MeasurementRetrieveUpdateDestroyView,
     MeasurementBySensorView,
-    MeasurementCreateView,
+    MeasurementAPICreateView,
     MeasurementPaginatedListView,
 )
 from .emission_limit_view import (

@@ -1,11 +1,11 @@
 from core.api.models import EmissionLimit
-from core.api.serializers import EmissionLimitSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     ListAPIView,
 )
+from core.api.serializers import EmissionLimitSerializer
 
 
 class EmissionLimitListCreateView(ListCreateAPIView):
@@ -19,9 +19,9 @@ class EmissionLimitListCreateView(ListCreateAPIView):
     def get_queryset(self):
         """
         Query Parameters:
-        - is_default (bool): Return only default emission limits.
-        - is_institution (bool): Return only emission limits that are associated with an institution.
-        - is_management (bool): Return only emission limits that are associated with a management.
+        - is_default        (bool): Return only default emission limits.
+        - is_institution    (bool): Return only emission limits that are associated with an institution.
+        - is_management     (bool): Return only emission limits that are associated with a management.
         """
         queryset = EmissionLimit.objects.all()
         query_params = self.request.query_params

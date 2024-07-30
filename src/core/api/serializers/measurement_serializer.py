@@ -2,22 +2,16 @@ from rest_framework import serializers
 from core.api.models import Status, Measurement
 
 
-class StatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Status
-        fields = "__all__"
-
-
 class MeasurementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Measurement
         fields = "__all__"
 
 
-class MeasurementGroupedPeriodeSerializer(serializers.Serializer):
-    date = serializers.DateTimeField()
+class MeasurementGroupedPeriodsSerializer(serializers.Serializer):
     device_name = serializers.CharField(source="sensor__device__name")
     gas_abbreviation = serializers.CharField(source="sensor__gas_type__abbreviation")
+    date = serializers.DateTimeField()
     value = serializers.DecimalField(max_digits=9, decimal_places=4)
 
 
@@ -56,3 +50,9 @@ class CreateMeasurementSerializer(serializers.ModelSerializer):
             "so2",
             "temperature",
         ]
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = "__all__"

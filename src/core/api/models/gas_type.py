@@ -1,5 +1,12 @@
 from django.db import models
 
+CO_ID = 1
+NO2_ID = 2
+SO2_ID = 3
+PM25_ID = 4
+PM10_ID = 5
+TEMPERATURE_ID = 6
+
 
 class GasType(models.Model):
     name = models.CharField(max_length=100, blank=False, verbose_name="Nombre")

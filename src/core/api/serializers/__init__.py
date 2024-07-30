@@ -9,7 +9,7 @@ from .measurement_serializer import (
     MeasurementSerializer,
     MeasurementPaginationSerializer,
     CreateMeasurementSerializer,
-    MeasurementGroupedPeriodeSerializer,
+    MeasurementGroupedPeriodsSerializer,
 )
 from .emission_limit_serializer import EmissionLimitSerializer
 from .limit_history_serializer import LimitHistorySerializer

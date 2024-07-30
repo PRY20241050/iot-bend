@@ -6,54 +6,51 @@ from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
-    ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     ListAPIView,
     CreateAPIView,
 )
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
-
+from core.api.pagination import GenericPagination
 from core.api.models import Status, Measurement, Sensor, GasType, LimitHistory, Alert
+from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
 from core.api.serializers import (
     StatusSerializer,
     MeasurementSerializer,
     MeasurementPaginationSerializer,
     CreateMeasurementSerializer,
-    MeasurementGroupedPeriodeSerializer,
+    MeasurementGroupedPeriodsSerializer,
 )
 from core.users.models import CustomUser
+from core.utils import split_string
+from core.utils.response import custom_response
 
 
-class StatusListCreateView(ListAPIView):
-    queryset = Status.objects.all()
-    serializer_class = StatusSerializer
+class MeasurementCreateView(CreateAPIView):
+    """
+    Handle POST requests for measurement data.
+    """
 
-
-class StatusRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    queryset = Status.objects.all()
-    serializer_class = StatusSerializer
-
-
-# ------------------------
-
-
-class MeasurementListView(ListCreateAPIView):
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
     permission_classes = [IsAuthenticated]
 
 
 class MeasurementRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    """
+    Handle GET, PUT, PATCH, and DELETE requests for a single measurement.
+    """
+
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
     permission_classes = [IsAuthenticated]
 
 
-# ------------------------
-
-
 class MeasurementBySensorView(ListAPIView):
+    """
+    Handle GET requests for measurement by sensor ID.
+    """
+
     serializer_class = MeasurementSerializer
     permission_classes = [IsAuthenticated]
 
@@ -62,63 +59,33 @@ class MeasurementBySensorView(ListAPIView):
         return Measurement.objects.filter(sensor_id=sensor_id)
 
 
-class MeasurementPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 1000
-
-
 class MeasurementPaginatedListView(ListAPIView):
-    pagination_class = MeasurementPagination
+    pagination_class = GenericPagination
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         group_by = self.request.query_params.get("group_by")
         if group_by:
-            return MeasurementGroupedPeriodeSerializer
+            return MeasurementGroupedPeriodsSerializer
         return MeasurementPaginationSerializer
 
     def get_queryset(self):
-        brickyard_ids_str = self.request.query_params.get("brickyard_ids")
-        gas_type_ids_str = self.request.query_params.get("gas_types")
-        start_date_str = self.request.query_params.get("start_date")
-        end_date_str = self.request.query_params.get("end_date")
-        device_id = self.request.query_params.get("device_id")
-        group_by = self.request.query_params.get("group_by")
+        params = self.get_query_params()
 
-        brickyard_ids = (
-            [int(id) for id in brickyard_ids_str.split(",")] if brickyard_ids_str else []
-        )
-
-        gas_type_ids = [int(id) for id in gas_type_ids_str.split(",")] if gas_type_ids_str else []
-
-        start_date = parse_datetime(start_date_str) if start_date_str else None
-        end_date = parse_datetime(end_date_str) if end_date_str else None
-
-        if not brickyard_ids:
+        if not params["brickyard_ids"]:
             return Measurement.objects.none()
 
-        if gas_type_ids:
-            gas_types = GasType.objects.filter(id__in=gas_type_ids)
-        else:
-            gas_types = GasType.objects.all()
-            print(gas_types)
-
-        date_filter = Q()
-        if start_date and end_date:
-            date_filter = Q(date__range=[start_date, end_date])
-        elif start_date:
-            date_filter = Q(date__gte=start_date)
-        elif end_date:
-            date_filter = Q(date__lte=end_date)
-
-        device_filter = Q()
-        if device_id:
-            device_filter = Q(sensor__device_id=device_id)
+        gas_types = (
+            GasType.objects.filter(id__in=params["gas_type_ids"])
+            if params["gas_type_ids"]
+            else GasType.objects.exclude(id=TEMPERATURE_ID)
+        )
+        date_filter = self.build_date_filter(params["start_date"], params["end_date"])
+        device_filter = Q(sensor__device_id=params["device_id"]) if params["device_id"] else Q()
 
         measurements = (
             Measurement.objects.filter(
-                Q(sensor__device__brickyard_id__in=brickyard_ids)
+                Q(sensor__device__brickyard_id__in=params["brickyard_ids"])
                 & Q(sensor__gas_type__in=gas_types)
                 & date_filter
                 & device_filter
@@ -128,27 +95,66 @@ class MeasurementPaginatedListView(ListAPIView):
             .order_by("-date")
         )
 
-        if group_by:
-            if group_by not in ["minute", "hour", "day"]:
-                raise ValueError("Valor inválido para group_by. Usa 'minute', 'hour', o 'day'.")
-
-            measurements = (
-                measurements.annotate(group_period=Trunc("date", group_by))
-                .values(
-                    "sensor__device__name",
-                    "sensor__gas_type__abbreviation",
-                    "group_period",
-                )
-                .annotate(value=Avg("value"))
-                .order_by("-group_period")
-            )
-
-            measurements = measurements.annotate(date=F("group_period"))
+        if params["group_by"]:
+            measurements = self.group_measurements(measurements, params["group_by"])
 
         return measurements
 
+    def get_query_params(self) -> dict:
+        """
+        Query Parameters:
+        - brickyard_ids (str): Filter measurements by brickyard IDs.
+        - gas_types     (str): Filter measurements by gas type IDs.
+        - device_id     (str): Filter measurements by device ID.
+        - start_date    (str): Filter measurements from start date.
+        - end_date      (str): Filter measurements until end date.
+        - group_by      (str): Group measurements by 'minute', 'hour', or 'day'.
+        """
 
-class MeasurementCreateView(CreateAPIView):
+        query_params = self.request.query_params
+
+        return {
+            "brickyard_ids": split_string(query_params.get("brickyard_ids")),
+            "gas_type_ids": split_string(query_params.get("gas_types")),
+            "device_id": query_params.get("device_id"),
+            "start_date": (
+                parse_datetime(query_params.get("start_date"))
+                if query_params.get("start_date")
+                else None
+            ),
+            "end_date": (
+                parse_datetime(query_params.get("end_date"))
+                if query_params.get("end_date")
+                else None
+            ),
+            "group_by": query_params.get("group_by"),
+        }
+
+    @staticmethod
+    def build_date_filter(start_date, end_date):
+        if start_date and end_date:
+            return Q(date__range=[start_date, end_date])
+        elif start_date:
+            return Q(date__gte=start_date)
+        elif end_date:
+            return Q(date__lte=end_date)
+        return Q()
+
+    @staticmethod
+    def group_measurements(measurements, group_by):
+        if group_by not in ["minute", "hour", "day"]:
+            raise ValueError("Valor inválido para group_by. Usa 'minute', 'hour', o 'day'.")
+
+        measurements = (
+            measurements.annotate(group_period=Trunc("date", group_by))
+            .values("sensor__device__name", "sensor__gas_type__abbreviation", "group_period")
+            .annotate(value=Avg("value"))
+            .order_by("-group_period")
+        )
+        return measurements.annotate(date=F("group_period"))
+
+
+class MeasurementAPICreateView(CreateAPIView):
     serializer_class = CreateMeasurementSerializer
 
     def create(self, request, *args, **kwargs):
@@ -160,11 +166,11 @@ class MeasurementCreateView(CreateAPIView):
         datetime_obj = parse_datetime(datetime_str)
 
         gas_types = {
-            "co": 1,
-            "no2": 2,
-            "so2": 3,
-            "pm25": 4,
-            "pm10": 5,
+            "co": CO_ID,
+            "no2": NO2_ID,
+            "so2": SO2_ID,
+            "pm25": PM25_ID,
+            "pm10": PM10_ID,
         }
 
         exceeded_limits = {}
@@ -261,3 +267,13 @@ class MeasurementCreateView(CreateAPIView):
         for gas_info in gases:
             message += f" * Gas: {gas_info['gas']}, Concentración registrada: {gas_info['value']}\n"
         return message
+
+
+class StatusListCreateView(ListAPIView):
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+
+
+class StatusRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer

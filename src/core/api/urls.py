@@ -87,24 +87,9 @@ sensors_patterns = [
     ),
 ]
 
-# Status URLs
-status_patterns = [
-    path("status/", views.StatusListCreateView.as_view(), name="status-list-create"),
-    path(
-        "status/<int:pk>/",
-        views.StatusRetrieveUpdateDestroyView.as_view(),
-        name="status-detail",
-    ),
-]
-
 # Measurements URLs
 measurements_patterns = [
-    path("measurements/", views.MeasurementListView.as_view(), name="measurement-list"),
-    path(
-        "measurements/create/",
-        views.MeasurementCreateView.as_view(),
-        name="measurement-create",
-    ),
+    path("measurements/", views.MeasurementCreateView.as_view(), name="measurement-create"),
     path(
         "measurements/<int:pk>/",
         views.MeasurementRetrieveUpdateDestroyView.as_view(),
@@ -115,6 +100,11 @@ measurements_patterns = [
         views.MeasurementBySensorView.as_view(),
         name="measurements-by-sensor",
     ),
+    path(
+        "measurements/create/",
+        views.MeasurementAPICreateView.as_view(),
+        name="measurement-api-create",
+    ),
     # using (params: brickyard_ids)
     path(
         "measurements/paginated/",
@@ -122,6 +112,17 @@ measurements_patterns = [
         name="measurement-paginated-list",
     ),
 ]
+
+# Status URLs
+status_patterns = [
+    path("status/", views.StatusListCreateView.as_view(), name="status-list-create"),
+    path(
+        "status/<int:pk>/",
+        views.StatusRetrieveUpdateDestroyView.as_view(),
+        name="status-detail",
+    ),
+]
+
 
 # Emission Limits URLs
 emission_limits_patterns = [
@@ -169,8 +170,8 @@ urlpatterns = (
     + devices_patterns
     + gases_patterns
     + sensors_patterns
-    + status_patterns
     + measurements_patterns
+    + status_patterns
     + emission_limits_patterns
     + limit_history_patterns
 )
