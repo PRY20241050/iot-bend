@@ -115,7 +115,7 @@ measurements_patterns = [
 
 # Status URLs
 status_patterns = [
-    path("status/", views.StatusListCreateView.as_view(), name="status-list-create"),
+    path("status/", views.StatusListView.as_view(), name="status-list"),
     path(
         "status/<int:pk>/",
         views.StatusRetrieveUpdateDestroyView.as_view(),

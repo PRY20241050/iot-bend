@@ -15,7 +15,7 @@ from .sensor_view import (
     SensorLastMeasurementView,
 )
 from .measurement_view import (
-    StatusListCreateView,
+    StatusListView,
     StatusRetrieveUpdateDestroyView,
     MeasurementCreateView,
     MeasurementRetrieveUpdateDestroyView,

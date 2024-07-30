@@ -8,7 +8,7 @@ def custom_response(
     if message is None:
         return Response(kwargs, status=status_code)
 
-    if status_code != status.HTTP_200_OK or status_code != status.HTTP_201_CREATED:
+    if status_code not in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
         key = "error"
 
     response_data = {key: message}

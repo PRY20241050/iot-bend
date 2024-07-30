@@ -4,7 +4,6 @@ from django.db.models.functions import Trunc
 from django.core.mail import send_mail
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     ListAPIView,
@@ -161,10 +160,20 @@ class MeasurementAPICreateView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        device_id = data["deviceId"]
+
         datetime_str = f"{data['date']} {data['time']}"
         datetime_obj = parse_datetime(datetime_str)
 
+        measurements = self.save_measurements(data, datetime_obj)
+        exceeded_limits = self.check_exceeded_limits(measurements)
+
+        if exceeded_limits:
+            self.send_alerts_and_create_notifications(exceeded_limits)
+
+        return custom_response("Guardado exitosamente", status.HTTP_201_CREATED)
+
+    def save_measurements(self, data, datetime_obj):
+        device_id = data["deviceId"]
         gas_types = {
             "co": CO_ID,
             "no2": NO2_ID,
@@ -172,61 +181,66 @@ class MeasurementAPICreateView(CreateAPIView):
             "pm25": PM25_ID,
             "pm10": PM10_ID,
         }
-
-        exceeded_limits = {}
+        measurements = []
 
         with transaction.atomic():
             for gas, gas_id in gas_types.items():
-                try:
-                    sensor = Sensor.objects.select_related("device", "gas_type").get(
-                        device_id=device_id, gas_type_id=gas_id
-                    )
-                    measurement = Measurement.objects.create(
-                        value=data[gas], date=datetime_obj, sensor=sensor
-                    )
-
-                    limit_histories = LimitHistory.objects.select_related("emission_limit").filter(
-                        gas_type_id=gas_id,
-                        emission_limit__management__brickyard=sensor.device.brickyard,
-                    )
-
-                    for limit_history in limit_histories:
-                        if measurement.value > limit_history.max_limit:
-                            emission_limit = limit_history.emission_limit
-                            if emission_limit not in exceeded_limits:
-                                exceeded_limits[emission_limit] = []
-                            exceeded_limits[emission_limit].append(
-                                {
-                                    "gas": gas,
-                                    "value": measurement.value,
-                                    "measurement": measurement,
-                                    "limit_history": limit_history,
-                                }
-                            )
-
-                except Sensor.DoesNotExist:
-                    return Response(
-                        {"error": f"No se encontró el sensor para el gas: {gas}"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                sensor = self.get_sensor(device_id, gas, gas_id)
+                measurement = Measurement.objects.create(
+                    value=data[gas], date=datetime_obj, sensor=sensor
+                )
+                measurements.append(measurement)
 
             if "temperature" in data:
-                try:
-                    temperature_sensor = Sensor.objects.get(device_id=device_id, gas_type_id=6)
-                    Measurement.objects.create(
-                        value=data["temperature"],
-                        date=datetime_obj,
-                        sensor=temperature_sensor,
-                    )
-                except Sensor.DoesNotExist:
-                    return Response(
-                        {"error": "No se encontró el sensor para la temperatura"},
-                        status=status.HTTP_400_BAD_REQUEST,
+                self.save_temperature_measurement(device_id, data["temperature"], datetime_obj)
+
+        return measurements
+
+    def save_temperature_measurement(self, device_id, temperature, datetime_obj):
+        sensor = self.get_sensor(device_id, "temperature", TEMPERATURE_ID)
+        Measurement.objects.create(value=temperature, date=datetime_obj, sensor=sensor)
+
+    @staticmethod
+    def get_sensor(device_id, gas, gas_id):
+        try:
+            return Sensor.objects.select_related("device", "gas_type").get(
+                device_id=device_id, gas_type_id=gas_id
+            )
+        except Sensor.DoesNotExist:
+            raise custom_response(
+                f"No se encontró el sensor para: {gas}", status.HTTP_400_BAD_REQUEST
+            )
+
+    @staticmethod
+    def check_exceeded_limits(measurements):
+        exceeded_limits = {}
+
+        for measurement in measurements:
+            gas = measurement.sensor.gas_type.name
+            gas_id = measurement.sensor.gas_type_id
+
+            limit_histories = LimitHistory.objects.select_related("emission_limit").filter(
+                gas_type_id=gas_id,
+                emission_limit__management__brickyard=measurement.sensor.device.brickyard,
+            )
+
+            for limit_history in limit_histories:
+                if measurement.value > limit_history.max_limit:
+                    emission_limit = limit_history.emission_limit
+
+                    if emission_limit not in exceeded_limits:
+                        exceeded_limits[emission_limit] = []
+
+                    exceeded_limits[emission_limit].append(
+                        {
+                            "gas": gas,
+                            "value": measurement.value,
+                            "measurement": measurement,
+                            "limit_history": limit_history,
+                        }
                     )
 
-        self.send_alerts_and_create_notifications(exceeded_limits)
-
-        return Response({"detail": "Guardado exitosamente"}, status=status.HTTP_201_CREATED)
+        return exceeded_limits
 
     def send_alerts_and_create_notifications(self, exceeded_limits):
         for emission_limit, gases in exceeded_limits.items():
@@ -246,7 +260,8 @@ class MeasurementAPICreateView(CreateAPIView):
                         user=recipient,
                     )
 
-    def get_recipients(self, emission_limit):
+    @staticmethod
+    def get_recipients(emission_limit):
         recipients = set()
         if emission_limit.institution:
             users = CustomUser.objects.filter(institution=emission_limit.institution)
@@ -262,18 +277,27 @@ class MeasurementAPICreateView(CreateAPIView):
 
         return list(recipients)
 
-    def create_email_message(self, emission_limit, gases):
+    @staticmethod
+    def create_email_message(emission_limit, gases):
         message = f"Se ha superado el límite de emisión '{emission_limit.name}' para los siguientes gases:\n"
         for gas_info in gases:
             message += f" * Gas: {gas_info['gas']}, Concentración registrada: {gas_info['value']}\n"
         return message
 
 
-class StatusListCreateView(ListAPIView):
+class StatusListView(ListAPIView):
+    """
+    Handle GET requests for status data.
+    """
+
     queryset = Status.objects.all()
     serializer_class = StatusSerializer
 
 
 class StatusRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    """
+    Handle GET, PUT, PATCH, and DELETE requests for a single status.
+    """
+
     queryset = Status.objects.all()
     serializer_class = StatusSerializer
