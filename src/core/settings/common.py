@@ -119,22 +119,15 @@ AUTH_PASSWORD_VALIDATORS = [
 # CORS settings
 # https://pypi.org/project/django-cors-headers/
 
-ALLOWED_HOSTS_CORS = [
-    f"http://{host}" if not host.startswith(("http://", "https://")) else host
-    for host in ALLOWED_HOSTS
-    if host not in ("*", "localhost", "127.0.0.1", "[::1]")
-]
+ALLOWED_HOSTS_CORS = []
 
-ALLOWED_HOSTS_CORS.extend(
-    [
-        "http://localhost",
-        "https://localhost",
-        "http://127.0.0.1",
-        "https://127.0.0.1",
-        "http://[::1]",
-        "https://[::1]",
-    ]
-)
+for host in ALLOWED_HOSTS:
+    if host != "*":
+        if not host.startswith(("http://", "https://")):
+            ALLOWED_HOSTS_CORS.append(f"http://{host}")
+            ALLOWED_HOSTS_CORS.append(f"https://{host}")
+        else:
+            ALLOWED_HOSTS_CORS.append(host)
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = ALLOWED_HOSTS_CORS
