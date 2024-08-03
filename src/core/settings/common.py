@@ -35,6 +35,7 @@ THIRD_PARTY_APPS = [
     "django_extensions",
     "rest_framework",
     "rest_framework_simplejwt",
+    "corsheaders",
 ]
 
 APPS = [
@@ -49,7 +50,7 @@ SITE_ID = 1
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    "corsheaders.middleware.CorsMiddleware" "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -113,6 +114,29 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+# CORS settings
+# https://pypi.org/project/django-cors-headers/
+
+ALLOWED_HOSTS_CORS = [
+    f"http://{host}" if not host.startswith(("http://", "https://")) else host
+    for host in ALLOWED_HOSTS
+    if host not in ("*", "localhost", "127.0.0.1", "[::1]")
+]
+
+ALLOWED_HOSTS_CORS.extend(
+    [
+        "http://localhost",
+        "https://localhost",
+        "http://127.0.0.1",
+        "https://127.0.0.1",
+        "http://[::1]",
+        "https://[::1]",
+    ]
+)
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = ALLOWED_HOSTS_CORS
 
 # JWT settings
 
