@@ -2,11 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
+from core.utils.consts import IS_TRUE
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-# Constants
-IS_TRUE = ["True", "true", "1"]
 
 # Load environment variables
 load_dotenv(BASE_DIR.parent / "environments" / ".env")

@@ -18,6 +18,11 @@ class EmissionLimit(models.Model):
         verbose_name="Alerta por aplicación",
         help_text="Se enviará una notificación a la aplicación",
     )
+    is_public = models.BooleanField(
+        default=False,
+        verbose_name="Público",
+        help_text="Este límite de emisión es público",
+    )
     is_default = models.BooleanField(
         default=False,
         verbose_name="Predeterminado",

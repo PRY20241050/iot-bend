@@ -1,7 +1,6 @@
 from django.urls import path, include
 from . import views
 
-
 # Users URLs
 users_patterns = [
     path("", include("core.users.urls")),
@@ -54,12 +53,6 @@ devices_patterns = [
         views.DeviceRetrieveUpdateDestroyView.as_view(),
         name="device-detail",
     ),
-    # using
-    path(
-        "devices/<int:device_id>/sensors/last_measurements/",
-        views.SensorLastMeasurementView.as_view(),
-        name="sensor_last_measurements",
-    ),
 ]
 
 # Gases URLs
@@ -100,6 +93,12 @@ measurements_patterns = [
         views.MeasurementBySensorView.as_view(),
         name="measurements-by-sensor",
     ),
+    # using
+    path(
+        "devices/<int:device_id>/sensors/last_measurements/",
+        views.SensorLastMeasurementView.as_view(),
+        name="sensor_last_measurements",
+    ),
     path(
         "measurements/create/",
         views.MeasurementAPICreateView.as_view(),
@@ -122,7 +121,6 @@ status_patterns = [
         name="status-detail",
     ),
 ]
-
 
 # Emission Limits URLs
 emission_limits_patterns = [
