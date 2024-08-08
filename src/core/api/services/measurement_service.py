@@ -93,6 +93,7 @@ class MeasurementService:
             if params["gas_type_ids"]
             else GasType.objects.exclude(id=TEMPERATURE_ID)
         )
+
         date_filter = MeasurementService.build_date_filter(params["start_date"], params["end_date"])
         device_filter = Q(sensor__device_id=params["device_id"]) if params["device_id"] else Q()
 
@@ -104,12 +105,17 @@ class MeasurementService:
                 & device_filter
             )
             .select_related("sensor", "sensor__device", "sensor__gas_type")
-            .only("id", "value", "date", "sensor__device__name", "sensor__gas_type__name")
+            .only("id", "value", "date", "sensor__device__name", "sensor__gas_type__abbreviation")
             .order_by("-date")
         )
 
         if params["group_by"]:
             measurements = MeasurementService.group_measurements(measurements, params["group_by"])
+
+        if params["by_emission_limit_id"]:
+            measurements = MeasurementService.get_above_emission_limit(
+                measurements, params["by_emission_limit_id"]
+            )
 
         return measurements
 
@@ -134,4 +140,18 @@ class MeasurementService:
             .annotate(value=Avg("value"))
             .order_by("-group_period")
         )
+
         return measurements.annotate(date=F("group_period"))
+
+    @staticmethod
+    def get_above_emission_limit(measurements, emission_limit_id):
+        limit_history = LimitHistory.objects.filter(emission_limit_id=emission_limit_id)
+
+        if not limit_history.exists():
+            return measurements.none()
+
+        limit_filter = Q()
+        for limit in limit_history:
+            limit_filter |= Q(sensor__gas_type_id=limit.gas_type_id, value__gte=limit.max_limit)
+
+        return measurements.filter(limit_filter).distinct().order_by("-date")

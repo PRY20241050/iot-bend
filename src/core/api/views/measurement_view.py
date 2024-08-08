@@ -71,12 +71,13 @@ class MeasurementPaginatedListView(ListAPIView):
     def get_query_params(self) -> dict:
         """
         Query Parameters:
-        - brickyard_ids (str): Filter measurements by brickyard IDs.
-        - gas_types     (str): Filter measurements by gas type IDs.
-        - device_id     (str): Filter measurements by device ID.
-        - start_date    (str): Filter measurements from start date.
-        - end_date      (str): Filter measurements until end date.
-        - group_by      (str): Group measurements by 'minute', 'hour', or 'day'.
+        - brickyard_ids         (str): Filter measurements by brickyard IDs.
+        - gas_types             (str): Filter measurements by gas type IDs.
+        - device_id             (str): Filter measurements by device ID.
+        - start_date            (str): Filter measurements from start date.
+        - end_date              (str): Filter measurements until end date.
+        - by_emission_limit_id  (str): Return all measurement equal or above this limit.
+        - group_by              (str): Group measurements by 'minute', 'hour', or 'day'.
         """
 
         query_params = self.request.query_params
@@ -95,6 +96,7 @@ class MeasurementPaginatedListView(ListAPIView):
                 if query_params.get("end_date")
                 else None
             ),
+            "by_emission_limit_id": query_params.get("by_emission_limit_id"),
             "group_by": query_params.get("group_by"),
         }
 
