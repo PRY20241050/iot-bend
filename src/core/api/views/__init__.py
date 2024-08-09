@@ -1,3 +1,4 @@
+from .alert_view import AlertListView, AlertRetrieveUpdateDestroyView, AlertMarkAsReadView
 from .brickyard_view import BrickyardListCreateView, BrickyardRetrieveUpdateDestroyView
 from .institution_view import (
     InstitutionListCreateView,

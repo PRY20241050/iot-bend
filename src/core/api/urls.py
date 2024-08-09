@@ -37,7 +37,7 @@ institutions_patterns = [
 # Management URLs
 management_patterns = [
     path(
-        "institution/<int:institution_id>/add_brickyards/",
+        "institution/<int:institution_id>/add-brickyards/",
         views.ManagementListCreateView.as_view(),
         name="add-brickyards-to-institution",
     ),
@@ -95,7 +95,7 @@ measurements_patterns = [
     ),
     # using
     path(
-        "devices/<int:device_id>/sensors/last_measurements/",
+        "devices/<int:device_id>/sensors/last-measurements/",
         views.SensorLastMeasurementView.as_view(),
         name="sensor_last_measurements",
     ),
@@ -125,17 +125,17 @@ status_patterns = [
 # Emission Limits URLs
 emission_limits_patterns = [
     path(
-        "emission_limits/",
+        "emission-limits/",
         views.EmissionLimitListCreateView.as_view(),
         name="emission-limit-list-create",
     ),
     path(
-        "emission_limits/<int:pk>/",
+        "emission-limits/<int:pk>/",
         views.EmissionLimitRetrieveUpdateDestroyView.as_view(),
         name="emission-limit-detail",
     ),
     path(
-        "management/<int:management_id>/emission_limits/",
+        "management/<int:management_id>/emission-limits/",
         views.EmissionLimitByManagementView.as_view(),
         name="emission-limits-by-management",
     ),
@@ -144,19 +144,34 @@ emission_limits_patterns = [
 # Limit History URLs
 limit_history_patterns = [
     path(
-        "limit_history/",
+        "limit-history/",
         views.LimitHistoryListCreateView.as_view(),
         name="limit-history-list-create",
     ),
     path(
-        "limit_history/<int:pk>/",
+        "limit-history/<int:pk>/",
         views.LimitHistoryRetrieveUpdateDestroyView.as_view(),
         name="limit-history-detail",
     ),
     path(
-        "emission_limit/<int:emission_limit_id>/limit_history/",
+        "emission-limit/<int:emission_limit_id>/limit-history/",
         views.LimitHistoryByEmissionLimitView.as_view(),
         name="limit-history-by-emission-limit",
+    ),
+]
+
+# Alerts URLs
+alerts_patterns = [
+    path("my-alerts/", views.AlertListView.as_view(), name="my-alerts-list"),
+    path(
+        "my-alerts/<int:pk>/",
+        views.AlertRetrieveUpdateDestroyView.as_view(),
+        name="alert-detail",
+    ),
+    path(
+        "my-alerts/mark-as-read/",
+        views.AlertMarkAsReadView.as_view(),
+        name="alert-mark-as-read",
     ),
 ]
 
@@ -172,4 +187,5 @@ urlpatterns = (
     + status_patterns
     + emission_limits_patterns
     + limit_history_patterns
+    + alerts_patterns
 )

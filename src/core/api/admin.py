@@ -81,7 +81,7 @@ class EmissionLimitAdmin(admin.ModelAdmin):
 
 class AlertAdmin(admin.ModelAdmin):
     model = models.Alert
-    list_display = ["id", "name", "is_read", "date"]
+    list_display = ["id", "name", "is_read", "created_at"]
 
 
 admin.site.register(models.Brickyard, BrickyardAdmin)
