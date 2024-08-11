@@ -1,6 +1,6 @@
 from django.db import models
 from core.api.validators import (
-    validate_institution_management,
+    validate_institution_brickyard_management,
     validate_unique_default_for_institution,
 )
 
@@ -64,7 +64,7 @@ class EmissionLimit(models.Model):
 
     def clean(self):
         super().clean()
-        validate_institution_management(self.institution, self.management)
+        validate_institution_brickyard_management(self.institution, self.brickyard, self.management)
         validate_unique_default_for_institution(self)
 
     def save(self, *args, **kwargs):
