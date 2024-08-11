@@ -26,6 +26,7 @@ from .emission_limit_view import (
     EmissionLimitListCreateView,
     EmissionLimitRetrieveUpdateDestroyView,
     EmissionLimitByManagementView,
+    EmissionLimitByBrickyardView,
 )
 from .limit_history_view import (
     LimitHistoryListCreateView,
