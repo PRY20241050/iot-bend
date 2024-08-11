@@ -36,6 +36,13 @@ class EmissionLimit(models.Model):
         null=True,
         verbose_name="Institución",
     )
+    brickyard = models.ForeignKey(
+        "api.Brickyard",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        verbose_name="Ladrillera",
+    )
     management = models.ForeignKey(
         "api.Management",
         on_delete=models.CASCADE,
@@ -44,7 +51,7 @@ class EmissionLimit(models.Model):
         verbose_name="Administración",
     )
 
-    last_update = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
 
     def __str__(self):

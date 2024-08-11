@@ -17,7 +17,7 @@ class Device(models.Model):
         verbose_name="Ladrillera",
     )
 
-    last_update = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
 
     def __str__(self):
