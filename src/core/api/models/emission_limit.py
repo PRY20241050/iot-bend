@@ -21,7 +21,7 @@ class EmissionLimit(models.Model):
     is_public = models.BooleanField(
         default=False,
         verbose_name="Público",
-        help_text="Este límite de emisión es público",
+        help_text="Este límite de emisión puede ser visto por las ladrilleras",
     )
     is_default = models.BooleanField(
         default=False,

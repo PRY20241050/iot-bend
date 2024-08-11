@@ -1,5 +1,6 @@
 from django.contrib import admin
 from . import models
+from rangefilter.filters import DateTimeRangeFilterBuilder
 
 
 class ManagementInline(admin.TabularInline):
@@ -63,6 +64,12 @@ class StatusAdmin(admin.ModelAdmin):
 class MeasurementAdmin(admin.ModelAdmin):
     model = models.Measurement
     list_display = ["id", "sensor", "status", "value", "date"]
+    list_filter = (
+        ("date", DateTimeRangeFilterBuilder()),
+        "sensor",
+        "sensor__device__name",
+        "sensor__device__brickyard__name",
+    )
 
 
 class EmissionLimitAdmin(admin.ModelAdmin):
@@ -81,7 +88,8 @@ class EmissionLimitAdmin(admin.ModelAdmin):
 
 class AlertAdmin(admin.ModelAdmin):
     model = models.Alert
-    list_display = ["id", "name", "is_read", "created_at"]
+    list_display = ["id", "name", "is_read", "created_at", "user"]
+    list_filter = ["user"]
 
 
 admin.site.register(models.Brickyard, BrickyardAdmin)
