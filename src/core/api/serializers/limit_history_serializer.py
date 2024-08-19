@@ -3,7 +3,12 @@ from rest_framework import serializers
 from core.api.models import LimitHistory
 
 
-class LimitHistorySerializer(serializers.ModelSerializer):
+class BaseLimitHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = LimitHistory
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
+
+
+class LimitHistorySerializer(BaseLimitHistorySerializer):
+    class Meta(BaseLimitHistorySerializer.Meta):
+        pass

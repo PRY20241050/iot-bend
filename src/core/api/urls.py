@@ -140,6 +140,11 @@ emission_limits_patterns = [
         name="emission-limits-by-brickyard",
     ),
     path(
+        "institution/<int:institution_id>/emission-limits/",
+        views.EmissionLimitByInstitutionView.as_view(),
+        name="emission-limits-by-institution",
+    ),
+    path(
         "management/<int:management_id>/emission-limits/",
         views.EmissionLimitByManagementView.as_view(),
         name="emission-limits-by-management",

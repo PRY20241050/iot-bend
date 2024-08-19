@@ -12,5 +12,5 @@ from .measurement_serializer import (
     CreateMeasurementSerializer,
     MeasurementGroupedPeriodsSerializer,
 )
-from .emission_limit_serializer import EmissionLimitSerializer
+from .emission_limit_serializer import EmissionLimitWithLimitHistorySerializer
 from .limit_history_serializer import LimitHistorySerializer

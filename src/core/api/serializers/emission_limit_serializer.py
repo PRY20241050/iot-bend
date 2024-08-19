@@ -7,12 +7,10 @@ from core.api.validators import (
 from .limit_history_serializer import LimitHistorySerializer
 
 
-class EmissionLimitSerializer(serializers.ModelSerializer):
-    limit_history = LimitHistorySerializer(many=True, read_only=True, source="limithistory_set")
-
+class BaseEmissionLimitSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmissionLimit
-        fields = "__all__"
+        exclude = ["created_at", "updated_at"]
 
     def validate(self, data):
         validate_institution_brickyard_management(
@@ -20,3 +18,10 @@ class EmissionLimitSerializer(serializers.ModelSerializer):
         )
         validate_unique_default_for_institution(EmissionLimit(**data))
         return data
+
+
+class EmissionLimitWithLimitHistorySerializer(BaseEmissionLimitSerializer):
+    limit_history = LimitHistorySerializer(many=True, read_only=True, source="limithistory_set")
+
+    class Meta(BaseEmissionLimitSerializer.Meta):
+        pass
