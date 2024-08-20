@@ -34,3 +34,11 @@ class SensorWithLastMeasurementSerializer(serializers.ModelSerializer):
         if last_measurement:
             return MeasurementSerializer(last_measurement).data
         return None
+
+
+class SensorWithMeasurementHistorySerializer(serializers.ModelSerializer):
+    gas_type_name = serializers.CharField(source="gas_type.abbreviation")
+
+    class Meta:
+        model = Sensor
+        exclude = ["updated_at", "created_at", "device"]

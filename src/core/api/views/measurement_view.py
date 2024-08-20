@@ -6,19 +6,21 @@ from rest_framework.generics import (
     CreateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
-from core.api.pagination import GenericPagination
-from core.api.models import Measurement, Alert
+from core.api.models import Measurement, Alert, Device
 from core.api.serializers import (
     MeasurementSerializer,
-    MeasurementPaginationSerializer,
+    MeasurementResumenSerializer,
     CreateMeasurementSerializer,
-    MeasurementGroupedPeriodsSerializer,
+    MeasurementResumenGroupedSerializer,
+    MeasurementHistorySerializer,
 )
 from core.api.services import MeasurementService
+from core.emails import send_html_email
 from core.users.models import CustomUser
 from core.utils import split_string
+from core.utils.consts import IS_TRUE
 from core.utils.response import custom_response
-from core.emails import send_html_email
+from core.utils.mixins import OptionalPaginationMixin
 
 
 class MeasurementCreateView(CreateAPIView):
@@ -29,76 +31,6 @@ class MeasurementCreateView(CreateAPIView):
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
     permission_classes = [IsAuthenticated]
-
-
-class MeasurementRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    """
-    Handle GET, PUT, PATCH, and DELETE requests for a single measurement.
-    """
-
-    queryset = Measurement.objects.all()
-    serializer_class = MeasurementSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class MeasurementBySensorView(ListAPIView):
-    """
-    Handle GET requests for measurement by sensor ID.
-    """
-
-    serializer_class = MeasurementSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        sensor_id = self.kwargs["sensor_id"]
-        return Measurement.objects.filter(sensor_id=sensor_id)
-
-
-class MeasurementPaginatedListView(ListAPIView):
-    pagination_class = GenericPagination
-    permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        group_by = self.request.query_params.get("group_by")
-        if group_by:
-            return MeasurementGroupedPeriodsSerializer
-        return MeasurementPaginationSerializer
-
-    def get_queryset(self):
-        params = self.get_query_params()
-        return MeasurementService.get_measurements(params)
-
-    def get_query_params(self) -> dict:
-        """
-        Query Parameters:
-        - brickyard_ids         (str): Filter measurements by brickyard IDs.
-        - gas_types             (str): Filter measurements by gas type IDs.
-        - device_id             (str): Filter measurements by device ID.
-        - start_date            (str): Filter measurements from start date.
-        - end_date              (str): Filter measurements until end date.
-        - by_emission_limit_id  (str): Return all measurement equal or above this limit.
-        - group_by              (str): Group measurements by 'minute', 'hour', or 'day'.
-        """
-
-        query_params = self.request.query_params
-
-        return {
-            "brickyard_ids": split_string(query_params.get("brickyard_ids")),
-            "gas_type_ids": split_string(query_params.get("gas_types")),
-            "device_id": query_params.get("device_id"),
-            "start_date": (
-                parse_datetime(query_params.get("start_date"))
-                if query_params.get("start_date")
-                else None
-            ),
-            "end_date": (
-                parse_datetime(query_params.get("end_date"))
-                if query_params.get("end_date")
-                else None
-            ),
-            "by_emission_limit_id": query_params.get("by_emission_limit_id"),
-            "group_by": query_params.get("group_by"),
-        }
 
 
 class MeasurementAPICreateView(CreateAPIView):
@@ -114,6 +46,12 @@ class MeasurementAPICreateView(CreateAPIView):
 
         measurements = MeasurementService.save_measurements(data, datetime_obj)
         exceeded_limits = MeasurementService.check_exceeded_limits(measurements)
+
+        device = Device.objects.get(id=data["deviceId"])
+        device.status = True
+        device.save(update_fields=["status", "updated_at"])
+
+        self.schedule_device_deactivation(device)
 
         if exceeded_limits:
             self.send_alerts_and_create_notifications(exceeded_limits)
@@ -166,3 +104,79 @@ class MeasurementAPICreateView(CreateAPIView):
             recipients.update([*brickyard_users, *institution_users])
 
         return list(recipients)
+
+    def schedule_device_deactivation(self, device):
+        pass
+
+
+class MeasurementRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    """
+    Handle GET, PUT, PATCH, and DELETE requests for a single measurement.
+    """
+
+    queryset = Measurement.objects.all()
+    serializer_class = MeasurementSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class MeasurementHistoryView(OptionalPaginationMixin, ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        group_by = self.request.query_params.get("group_by")
+        if group_by:
+            return MeasurementResumenGroupedSerializer
+        return MeasurementResumenSerializer
+
+    def get_queryset(self):
+        params = self.get_query_params()
+        return MeasurementService.get_measurements(params)
+
+    def get_query_params(self) -> dict:
+        """
+        Query Parameters:
+        - brickyard_ids         (str): Filter measurements by brickyard IDs.
+        - gas_types             (str): Filter measurements by gas type IDs.
+        - device_id             (str): Filter measurements by device ID.
+        - start_date            (str): Filter measurements from start date.
+        - end_date              (str): Filter measurements until end date.
+        - by_emission_limit_id  (str): Return all measurement equal or above this limit.
+        - group_by              (str): Group measurements by 'minute', 'hour', or 'day'.
+        - paginated             (bool): Return paginated results if true.
+        - limit                 (int): Number of results returned.
+        """
+
+        query_params = self.request.query_params
+
+        return {
+            "brickyard_ids": split_string(query_params.get("brickyard_ids")),
+            "gas_type_ids": split_string(query_params.get("gas_types")),
+            "device_id": query_params.get("device_id"),
+            "start_date": (
+                parse_datetime(query_params.get("start_date"))
+                if query_params.get("start_date")
+                else None
+            ),
+            "end_date": (
+                parse_datetime(query_params.get("end_date"))
+                if query_params.get("end_date")
+                else None
+            ),
+            "by_emission_limit_id": query_params.get("by_emission_limit_id"),
+            "group_by": query_params.get("group_by"),
+            "paginated": query_params.get("paginated") in IS_TRUE,
+            "limit": int(query_params.get("limit")) if query_params.get("limit") else None,
+        }
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        return self.paginate_if_needed(queryset)
+
+
+class MeasurementsHistoryView(ListAPIView):
+    serializer_class = MeasurementHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        device_id = self.kwargs["device_id"]
+        return Measurement.objects.filter(sensor__device_id=device_id)

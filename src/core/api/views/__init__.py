@@ -14,13 +14,14 @@ from .sensor_view import (
     SensorRetrieveUpdateDestroyView,
     SensorsByDeviceView,
     SensorLastMeasurementView,
+    SensorWithMeasurementsHistoryView,
 )
 from .measurement_view import (
     MeasurementCreateView,
     MeasurementRetrieveUpdateDestroyView,
-    MeasurementBySensorView,
     MeasurementAPICreateView,
-    MeasurementPaginatedListView,
+    MeasurementHistoryView,
+    MeasurementsHistoryView,
 )
 from .emission_limit_view import (
     EmissionLimitListCreateView,

@@ -84,31 +84,31 @@ sensors_patterns = [
 measurements_patterns = [
     path("measurements/", views.MeasurementCreateView.as_view(), name="measurement-create"),
     path(
+        "measurements/create/",
+        views.MeasurementAPICreateView.as_view(),
+        name="measurement-api-create",
+    ),
+    path(
         "measurements/<int:pk>/",
         views.MeasurementRetrieveUpdateDestroyView.as_view(),
         name="measurement-detail",
     ),
     path(
-        "sensor/<int:sensor_id>/measurements/",
-        views.MeasurementBySensorView.as_view(),
-        name="measurements-by-sensor",
+        "measurements/history/",
+        views.MeasurementHistoryView.as_view(),
+        name="measurement-history-list",
     ),
+    # TODO: refactor last-measurements view
     # using
     path(
         "devices/<int:device_id>/sensors/last-measurements/",
         views.SensorLastMeasurementView.as_view(),
-        name="sensor_last_measurements",
+        name="sensor-last-measurements",
     ),
     path(
-        "measurements/create/",
-        views.MeasurementAPICreateView.as_view(),
-        name="measurement-api-create",
-    ),
-    # using (params: brickyard_ids)
-    path(
-        "measurements/paginated/",
-        views.MeasurementPaginatedListView.as_view(),
-        name="measurement-paginated-list",
+        "devices/<int:device_id>/mesurements/history/",
+        views.MeasurementsHistoryView.as_view(),
+        name="device-measurements-history",
     ),
 ]
 

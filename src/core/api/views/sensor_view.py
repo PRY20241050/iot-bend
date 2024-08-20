@@ -5,7 +5,11 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAuthenticated
 from core.api.models import Sensor
-from core.api.serializers import SensorSerializer, SensorWithLastMeasurementSerializer
+from core.api.serializers import (
+    SensorSerializer,
+    SensorWithLastMeasurementSerializer,
+    SensorWithMeasurementHistorySerializer,
+)
 
 
 class SensorListCreateView(ListCreateAPIView):
@@ -31,6 +35,15 @@ class SensorsByDeviceView(ListAPIView):
 
 class SensorLastMeasurementView(ListAPIView):
     serializer_class = SensorWithLastMeasurementSerializer
+
+    def get_queryset(self):
+        device_id = self.kwargs["device_id"]
+        return Sensor.objects.filter(device_id=device_id)
+
+
+# TODO: delete
+class SensorWithMeasurementsHistoryView(ListAPIView):
+    serializer_class = SensorWithMeasurementHistorySerializer
 
     def get_queryset(self):
         device_id = self.kwargs["device_id"]

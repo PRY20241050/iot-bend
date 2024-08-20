@@ -85,9 +85,6 @@ class MeasurementService:
 
     @staticmethod
     def get_measurements(params):
-        if not params["brickyard_ids"]:
-            return Measurement.objects.none()
-
         gas_types = (
             GasType.objects.filter(id__in=params["gas_type_ids"])
             if params["gas_type_ids"]
@@ -117,6 +114,9 @@ class MeasurementService:
                 measurements, params["by_emission_limit_id"]
             )
 
+        if params["limit"]:
+            measurements = measurements[: params["limit"]]
+
         return measurements
 
     @staticmethod
@@ -136,7 +136,12 @@ class MeasurementService:
 
         measurements = (
             measurements.annotate(group_period=Trunc("date", group_by))
-            .values("sensor__device__name", "sensor__gas_type__abbreviation", "group_period")
+            .values(
+                "sensor__device__name",
+                "sensor__gas_type__abbreviation",
+                "sensor__gas_type__id",
+                "group_period",
+            )
             .annotate(value=Avg("value"))
             .order_by("-group_period")
         )
