@@ -105,11 +105,6 @@ measurements_patterns = [
         views.SensorLastMeasurementView.as_view(),
         name="sensor-last-measurements",
     ),
-    path(
-        "devices/<int:device_id>/mesurements/history/",
-        views.MeasurementsHistoryView.as_view(),
-        name="device-measurements-history",
-    ),
 ]
 
 # Status URLs

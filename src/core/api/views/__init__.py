@@ -21,7 +21,6 @@ from .measurement_view import (
     MeasurementRetrieveUpdateDestroyView,
     MeasurementAPICreateView,
     MeasurementHistoryView,
-    MeasurementsHistoryView,
 )
 from .emission_limit_view import (
     EmissionLimitListCreateView,

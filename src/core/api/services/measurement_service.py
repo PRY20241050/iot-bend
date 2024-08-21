@@ -1,6 +1,6 @@
 from django.db import transaction
-from django.db.models import Q, Avg, F
-from django.db.models.functions import Trunc
+from django.db.models import Q, Avg, F, Window
+from django.db.models.functions import Trunc, RowNumber
 from rest_framework import status
 from core.api.models import Measurement, Sensor, GasType, LimitHistory
 from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
@@ -8,6 +8,11 @@ from core.utils.response import custom_response
 
 
 class MeasurementService:
+    VALID_ORDER_FIELDS = {
+        "date": "date",
+        "gas_type": "sensor__gas_type__abbreviation",
+        "device_name": "sensor__device__name",
+    }
 
     @staticmethod
     def save_measurements(data, datetime_obj):
@@ -103,7 +108,6 @@ class MeasurementService:
             )
             .select_related("sensor", "sensor__device", "sensor__gas_type")
             .only("id", "value", "date", "sensor__device__name", "sensor__gas_type__abbreviation")
-            .order_by("-date")
         )
 
         if params["group_by"]:
@@ -114,8 +118,24 @@ class MeasurementService:
                 measurements, params["by_emission_limit_id"]
             )
 
+        measurements = measurements.annotate(
+            row_num=Window(expression=RowNumber(), order_by=F("date").desc())
+        )
+
         if params["limit"]:
-            measurements = measurements[: params["limit"]]
+            measurements = measurements.filter(row_num__lte=params["limit"])
+
+        if params["order_by"]:
+            order_by_fields = []
+            for field in params["order_by"]:
+                order_by_field = MeasurementService.VALID_ORDER_FIELDS.get(field.lstrip("-"))
+                if order_by_field:
+                    if field.startswith("-"):
+                        order_by_fields.append(f"-{order_by_field}")
+                    else:
+                        order_by_fields.append(order_by_field)
+            if order_by_fields:
+                measurements = measurements.order_by(*order_by_fields)
 
         return measurements
 
@@ -143,7 +163,6 @@ class MeasurementService:
                 "group_period",
             )
             .annotate(value=Avg("value"))
-            .order_by("-group_period")
         )
 
         return measurements.annotate(date=F("group_period"))
@@ -159,4 +178,4 @@ class MeasurementService:
         for limit in limit_history:
             limit_filter |= Q(sensor__gas_type_id=limit.gas_type_id, value__gte=limit.max_limit)
 
-        return measurements.filter(limit_filter).distinct().order_by("-date")
+        return measurements.filter(limit_filter).distinct()

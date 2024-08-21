@@ -12,7 +12,6 @@ from core.api.serializers import (
     MeasurementResumenSerializer,
     CreateMeasurementSerializer,
     MeasurementResumenGroupedSerializer,
-    MeasurementHistorySerializer,
 )
 from core.api.services import MeasurementService
 from core.emails import send_html_email
@@ -144,13 +143,18 @@ class MeasurementHistoryView(OptionalPaginationMixin, ListAPIView):
         - group_by              (str): Group measurements by 'minute', 'hour', or 'day'.
         - paginated             (bool): Return paginated results if true.
         - limit                 (int): Number of results returned.
+        - order_by              (list): Order results by any field in the model.
         """
 
         query_params = self.request.query_params
 
         return {
             "brickyard_ids": split_string(query_params.get("brickyard_ids")),
-            "gas_type_ids": split_string(query_params.get("gas_types")),
+            "gas_type_ids": (
+                split_string(query_params.get("gas_types"))
+                if query_params.get("gas_types")
+                else None
+            ),
             "device_id": query_params.get("device_id"),
             "start_date": (
                 parse_datetime(query_params.get("start_date"))
@@ -166,17 +170,13 @@ class MeasurementHistoryView(OptionalPaginationMixin, ListAPIView):
             "group_by": query_params.get("group_by"),
             "paginated": query_params.get("paginated") in IS_TRUE,
             "limit": int(query_params.get("limit")) if query_params.get("limit") else None,
+            "order_by": (
+                split_string(query_params.get("order_by"), conversion_type=str)
+                if query_params.get("order_by")
+                else None
+            ),
         }
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         return self.paginate_if_needed(queryset)
-
-
-class MeasurementsHistoryView(ListAPIView):
-    serializer_class = MeasurementHistorySerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        device_id = self.kwargs["device_id"]
-        return Measurement.objects.filter(sensor__device_id=device_id)

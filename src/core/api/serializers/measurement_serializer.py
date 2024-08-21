@@ -8,12 +8,6 @@ class MeasurementSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class MeasurementHistorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Measurement
-        fields = "__all__"
-
-
 class MeasurementResumenGroupedSerializer(serializers.Serializer):
     device_name = serializers.CharField(source="sensor__device__name")
     gas_abbreviation = serializers.CharField(source="sensor__gas_type__abbreviation")
