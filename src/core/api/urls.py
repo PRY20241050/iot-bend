@@ -98,6 +98,11 @@ measurements_patterns = [
         views.MeasurementHistoryView.as_view(),
         name="measurement-history-list",
     ),
+    path(
+        "measurements/history/grouped_by_gas/",
+        views.MeasurementGroupedByGasView.as_view(),
+        name="measurement-grouped-by-gas-list",
+    ),
     # TODO: refactor last-measurements view
     # using
     path(

@@ -12,14 +12,14 @@ from core.api.serializers import (
     MeasurementResumenSerializer,
     CreateMeasurementSerializer,
     MeasurementResumenGroupedSerializer,
+    MeasurementGroupedByGasSerializer,
 )
 from core.api.services import MeasurementService
 from core.emails import send_html_email
 from core.users.models import CustomUser
-from core.utils import split_string
-from core.utils.consts import IS_TRUE
 from core.utils.response import custom_response
 from core.utils.mixins import OptionalPaginationMixin
+from rest_framework.response import Response
 
 
 class MeasurementCreateView(CreateAPIView):
@@ -128,54 +128,22 @@ class MeasurementHistoryView(OptionalPaginationMixin, ListAPIView):
         return MeasurementResumenSerializer
 
     def get_queryset(self):
-        params = self.get_query_params()
+        params = MeasurementService.get_query_params(self.request)
         return MeasurementService.get_measurements(params)
 
-    def get_query_params(self) -> dict:
-        """
-        Query Parameters:
-        - brickyard_ids         (str): Filter measurements by brickyard IDs.
-        - gas_types             (str): Filter measurements by gas type IDs.
-        - device_id             (str): Filter measurements by device ID.
-        - start_date            (str): Filter measurements from start date.
-        - end_date              (str): Filter measurements until end date.
-        - by_emission_limit_id  (str): Return all measurement equal or above this limit.
-        - group_by              (str): Group measurements by 'minute', 'hour', or 'day'.
-        - paginated             (bool): Return paginated results if true.
-        - limit                 (int): Number of results returned.
-        - order_by              (list): Order results by any field in the model.
-        """
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        return self.paginate_if_needed(queryset)
 
-        query_params = self.request.query_params
 
-        return {
-            "brickyard_ids": split_string(query_params.get("brickyard_ids")),
-            "gas_type_ids": (
-                split_string(query_params.get("gas_types"))
-                if query_params.get("gas_types")
-                else None
-            ),
-            "device_id": query_params.get("device_id"),
-            "start_date": (
-                parse_datetime(query_params.get("start_date"))
-                if query_params.get("start_date")
-                else None
-            ),
-            "end_date": (
-                parse_datetime(query_params.get("end_date"))
-                if query_params.get("end_date")
-                else None
-            ),
-            "by_emission_limit_id": query_params.get("by_emission_limit_id"),
-            "group_by": query_params.get("group_by"),
-            "paginated": query_params.get("paginated") in IS_TRUE,
-            "limit": int(query_params.get("limit")) if query_params.get("limit") else None,
-            "order_by": (
-                split_string(query_params.get("order_by"), conversion_type=str)
-                if query_params.get("order_by")
-                else None
-            ),
-        }
+class MeasurementGroupedByGasView(OptionalPaginationMixin, ListAPIView):
+    serializer_class = MeasurementGroupedByGasSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        params = MeasurementService.get_query_params(self.request)
+        grouped_data = MeasurementService.get_measurements_grouped_by_gas(params)
+        return grouped_data
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

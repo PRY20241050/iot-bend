@@ -1,9 +1,13 @@
-from django.db import transaction
-from django.db.models import Q, Avg, F, Window
-from django.db.models.functions import Trunc, RowNumber
+from collections import defaultdict
 from rest_framework import status
-from core.api.models import Measurement, Sensor, GasType, LimitHistory
+from django.utils.dateparse import parse_datetime
+from django.db import transaction
+from django.db.models import Q, Avg, F, Window, Max, Min
+from django.db.models.functions import Trunc, RowNumber
+from core.api.models import Measurement, Sensor, GasType, LimitHistory, Device
 from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
+from core.utils import split_string
+from core.utils.consts import IS_TRUE
 from core.utils.response import custom_response
 
 
@@ -14,6 +18,7 @@ class MeasurementService:
         "device_name": "sensor__device__name",
     }
 
+    # Save
     @staticmethod
     def save_measurements(data, datetime_obj):
         device_id = data["deviceId"]
@@ -88,6 +93,54 @@ class MeasurementService:
 
         return exceeded_limits
 
+    @staticmethod
+    def get_query_params(request) -> dict:
+        """
+        Query Parameters:
+        - brickyard_ids         (str): Filter measurements by brickyard IDs.
+        - gas_types             (str): Filter measurements by gas type IDs.
+        - device_id             (str): Filter measurements by device ID.
+        - start_date            (str): Filter measurements from start date.
+        - end_date              (str): Filter measurements until end date.
+        - by_emission_limit_id  (str): Return all measurement equal or above this limit.
+        - group_by              (str): Group measurements by 'minute', 'hour', or 'day'.
+        - paginated             (bool): Return paginated results if true.
+        - limit                 (int): Number of results returned.
+        - order_by              (list): Order results by any field in the model.
+        """
+
+        query_params = request.query_params
+
+        return {
+            "brickyard_ids": split_string(query_params.get("brickyard_ids")),
+            "gas_type_ids": (
+                split_string(query_params.get("gas_types"))
+                if query_params.get("gas_types")
+                else None
+            ),
+            "device_id": query_params.get("device_id"),
+            "start_date": (
+                parse_datetime(query_params.get("start_date"))
+                if query_params.get("start_date")
+                else None
+            ),
+            "end_date": (
+                parse_datetime(query_params.get("end_date"))
+                if query_params.get("end_date")
+                else None
+            ),
+            "by_emission_limit_id": query_params.get("by_emission_limit_id"),
+            "group_by": query_params.get("group_by"),
+            "paginated": query_params.get("paginated") in IS_TRUE,
+            "limit": int(query_params.get("limit")) if query_params.get("limit") else None,
+            "order_by": (
+                split_string(query_params.get("order_by"), conversion_type=str)
+                if query_params.get("order_by")
+                else None
+            ),
+        }
+
+    # Get
     @staticmethod
     def get_measurements(params):
         gas_types = (
@@ -179,3 +232,63 @@ class MeasurementService:
             limit_filter |= Q(sensor__gas_type_id=limit.gas_type_id, value__gte=limit.max_limit)
 
         return measurements.filter(limit_filter).distinct()
+
+    @staticmethod
+    def get_measurements_grouped_by_gas(params):
+        measurements = MeasurementService.get_measurements(params)
+
+        grouped_data = defaultdict(
+            lambda: {
+                "gas_type": None,
+                "gas_abbreviation": None,
+                "measurements": defaultdict(dict),
+                "avg": None,
+                "max": None,
+                "min": None,
+            }
+        )
+
+        if params["device_id"]:
+            device_filter = Q(id=params["device_id"])
+        else:
+            device_filter = Q(brickyard_id__in=params["brickyard_ids"])
+
+        device_names = Device.objects.filter(device_filter).values_list("name", flat=True)
+
+        for measurement in measurements:
+            if params["group_by"]:
+                gas_id = measurement["sensor__gas_type__id"]
+                gas_abbreviation = measurement["sensor__gas_type__abbreviation"]
+                device_name = measurement["sensor__device__name"]
+                date = measurement["date"]
+                value = measurement["value"]
+            else:
+                gas_id = measurement.sensor.gas_type_id
+                gas_abbreviation = measurement.sensor.gas_type.abbreviation
+                device_name = measurement.sensor.device.name
+                date = measurement.date
+                value = measurement.value
+
+            grouped_data[gas_id]["gas_type"] = gas_id
+            grouped_data[gas_id]["gas_abbreviation"] = gas_abbreviation
+            grouped_data[gas_id]["measurements"][date][device_name] = value
+
+        for gas_id, data in grouped_data.items():
+            aggregated_data = measurements.filter(sensor__gas_type__id=gas_id).aggregate(
+                avg_value=Avg("value"), max_value=Max("value"), min_value=Min("value")
+            )
+
+            grouped_data[gas_id]["avg"] = aggregated_data["avg_value"]
+            grouped_data[gas_id]["max"] = aggregated_data["max_value"]
+            grouped_data[gas_id]["min"] = aggregated_data["min_value"]
+
+            for date, devices in data["measurements"].items():
+                for device_name in device_names:
+                    if device_name not in devices:
+                        devices[device_name] = None
+
+            data["measurements"] = [
+                {"date": date, **devices} for date, devices in data["measurements"].items()
+            ]
+
+        return grouped_data.values()

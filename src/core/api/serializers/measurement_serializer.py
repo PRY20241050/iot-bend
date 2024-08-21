@@ -8,6 +8,23 @@ class MeasurementSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CreateMeasurementSerializer(serializers.Serializer):
+    deviceId = serializers.IntegerField()
+    date = serializers.DateField()
+    time = serializers.TimeField()
+    pm25 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    pm10 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    co = serializers.DecimalField(max_digits=9, decimal_places=4)
+    no2 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    so2 = serializers.DecimalField(max_digits=9, decimal_places=4)
+    temperature = serializers.DecimalField(
+        max_digits=9, decimal_places=4, required=False, allow_null=True
+    )
+
+    class Meta:
+        fields = "__all__"
+
+
 class MeasurementResumenGroupedSerializer(serializers.Serializer):
     device_name = serializers.CharField(source="sensor__device__name")
     gas_abbreviation = serializers.CharField(source="sensor__gas_type__abbreviation")
@@ -26,32 +43,13 @@ class MeasurementResumenSerializer(serializers.ModelSerializer):
         fields = ["id", "device_name", "gas_abbreviation", "gas_type", "date", "value"]
 
 
-class CreateMeasurementSerializer(serializers.ModelSerializer):
-    deviceId = serializers.IntegerField()
-    date = serializers.DateField()
-    time = serializers.TimeField()
-    pm25 = serializers.DecimalField(max_digits=9, decimal_places=4)
-    pm10 = serializers.DecimalField(max_digits=9, decimal_places=4)
-    co = serializers.DecimalField(max_digits=9, decimal_places=4)
-    no2 = serializers.DecimalField(max_digits=9, decimal_places=4)
-    so2 = serializers.DecimalField(max_digits=9, decimal_places=4)
-    temperature = serializers.DecimalField(
-        max_digits=9, decimal_places=4, required=False, allow_null=True
-    )
-
-    class Meta:
-        model = Measurement
-        fields = [
-            "deviceId",
-            "date",
-            "time",
-            "pm25",
-            "pm10",
-            "co",
-            "no2",
-            "so2",
-            "temperature",
-        ]
+class MeasurementGroupedByGasSerializer(serializers.Serializer):
+    gas_type = serializers.IntegerField(read_only=True)
+    gas_abbreviation = serializers.CharField(read_only=True)
+    measurements = serializers.ListField(child=serializers.DictField())
+    avg = serializers.DecimalField(max_digits=9, decimal_places=4)
+    max = serializers.DecimalField(max_digits=9, decimal_places=4)
+    min = serializers.DecimalField(max_digits=9, decimal_places=4)
 
 
 class StatusSerializer(serializers.ModelSerializer):
