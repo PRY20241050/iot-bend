@@ -99,7 +99,7 @@ measurements_patterns = [
         name="measurement-history-list",
     ),
     path(
-        "measurements/history/grouped_by_gas/",
+        "measurements/history/grouped-by-gas/",
         views.MeasurementGroupedByGasView.as_view(),
         name="measurement-grouped-by-gas-list",
     ),
