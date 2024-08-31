@@ -82,8 +82,8 @@ class EmissionLimitAdmin(admin.ModelAdmin):
         "institution",
         "brickyard",
         "management",
+        "is_active",
         "is_public",
-        "is_default",
     ]
     inlines = [LimitHistoryInline]
 

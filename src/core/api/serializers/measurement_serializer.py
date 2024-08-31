@@ -47,9 +47,9 @@ class MeasurementGroupedByGasSerializer(serializers.Serializer):
     gas_type = serializers.IntegerField(read_only=True)
     gas_abbreviation = serializers.CharField(read_only=True)
     measurements = serializers.ListField(child=serializers.DictField())
-    avg = serializers.DecimalField(max_digits=9, decimal_places=4)
-    max = serializers.DecimalField(max_digits=9, decimal_places=4)
-    min = serializers.DecimalField(max_digits=9, decimal_places=4)
+    avg = serializers.DecimalField(max_digits=8, decimal_places=3)
+    max = serializers.DecimalField(max_digits=8, decimal_places=3)
+    min = serializers.DecimalField(max_digits=8, decimal_places=3)
 
 
 class StatusSerializer(serializers.ModelSerializer):

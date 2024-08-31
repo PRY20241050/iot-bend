@@ -3,7 +3,7 @@ from rest_framework import status
 from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db.models import Q, Avg, F, Window, Max, Min
-from django.db.models.functions import Trunc, RowNumber
+from django.db.models.functions import Trunc, RowNumber, Round
 from core.api.models import Measurement, Sensor, GasType, LimitHistory, Device
 from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
 from core.utils import split_string
@@ -215,7 +215,7 @@ class MeasurementService:
                 "sensor__gas_type__id",
                 "group_period",
             )
-            .annotate(value=Avg("value"))
+            .annotate(value=Round(Avg("value"), 3))
         )
 
         return measurements.annotate(date=F("group_period"))

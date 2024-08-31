@@ -2,7 +2,6 @@ from rest_framework import serializers
 from core.api.models import EmissionLimit
 from core.api.validators import (
     validate_institution_brickyard_management,
-    validate_unique_default_for_institution,
 )
 from .limit_history_serializer import LimitHistorySerializer
 
@@ -16,7 +15,6 @@ class BaseEmissionLimitSerializer(serializers.ModelSerializer):
         validate_institution_brickyard_management(
             data.get("institution"), data.get("brickyard"), data.get("management")
         )
-        validate_unique_default_for_institution(EmissionLimit(**data))
         return data
 
 

@@ -19,7 +19,6 @@ from core.emails import send_html_email
 from core.users.models import CustomUser
 from core.utils.response import custom_response
 from core.utils.mixins import OptionalPaginationMixin
-from rest_framework.response import Response
 
 
 class MeasurementCreateView(CreateAPIView):

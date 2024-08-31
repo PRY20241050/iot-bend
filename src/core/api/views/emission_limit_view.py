@@ -13,9 +13,7 @@ from core.utils.mixins import OptionalPaginationMixin
 
 
 class EmissionLimitListCreateView(OptionalPaginationMixin, ListCreateAPIView):
-    """
-    Handle GET and POST requests for emission limits.
-    """
+    """Handle GET and POST requests for emission limits."""
 
     serializer_class = EmissionLimitWithLimitHistorySerializer
     permission_classes = [IsAuthenticated]
@@ -31,8 +29,8 @@ class EmissionLimitListCreateView(OptionalPaginationMixin, ListCreateAPIView):
     def build_filters(params):
         query_filter = Q()
 
-        if params["is_default"]:
-            query_filter &= Q(is_default=params["is_default"])
+        if params["is_active"]:
+            query_filter &= Q(is_active=params["is_active"])
 
         if params["is_public"]:
             query_filter &= Q(is_public=params["is_public"])
@@ -51,7 +49,7 @@ class EmissionLimitListCreateView(OptionalPaginationMixin, ListCreateAPIView):
     def get_query_params(self):
         """
         Query Parameters:
-        - is_default        (bool): Return only default emission limits.
+        - is_active         (bool): Return only active emission limits.
         - is_public         (bool): Return only public emission limits.
         - brickyard_id      (int) : Return only emission limits that are associated with a specific brickyard.
         - institution_id    (int) : Return only emission limits that are associated with a specific institution.
@@ -61,7 +59,7 @@ class EmissionLimitListCreateView(OptionalPaginationMixin, ListCreateAPIView):
 
         query_params = self.request.query_params
         return {
-            "is_default": query_params.get("is_default") in IS_TRUE,
+            "is_active": query_params.get("is_active") in IS_TRUE,
             "is_public": query_params.get("is_public") in IS_TRUE,
             "brickyard_id": query_params.get("brickyard_id"),
             "institution_id": query_params.get("institution_id"),
@@ -74,23 +72,8 @@ class EmissionLimitListCreateView(OptionalPaginationMixin, ListCreateAPIView):
         return self.paginate_if_needed(queryset)
 
 
-class EmissionLimitByManagementView(ListAPIView):
-    """
-    Handle GET requests for emission limits by management ID.
-    """
-
-    serializer_class = EmissionLimitWithLimitHistorySerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        management_id = self.kwargs["management_id"]
-        return EmissionLimit.objects.filter(management_id=management_id)
-
-
 class EmissionLimitByInstitutionView(OptionalPaginationMixin, ListAPIView):
-    """
-    Handle GET requests for emission limits by institution ID.
-    """
+    """Handle GET requests for emission limits by institution ID."""
 
     serializer_class = EmissionLimitWithLimitHistorySerializer
     permission_classes = [IsAuthenticated]
@@ -107,12 +90,22 @@ class EmissionLimitByInstitutionView(OptionalPaginationMixin, ListAPIView):
     def build_filters(institution_id, params):
         query_filter = Q(institution_id=institution_id)
 
-        if params["brickyard_ids"]:
-            brickyard_filter = Q(brickyard_id__in=params["brickyard_ids"])
+        if params["is_active"]:
+            query_filter &= Q(is_active=params["is_active"])
+
+        if params["is_public"]:
+            query_filter &= Q(is_public=params["is_public"])
+
+        if params["add_brickyard_ids"]:
+            brickyard_filter = Q(brickyard_id__in=params["add_brickyard_ids"])
+            if params["only_public_brickyards"]:
+                brickyard_filter &= Q(is_public=params["only_public_brickyards"])
             query_filter |= brickyard_filter
 
-        if params["add_brickyard"]:
+        if params["add_all_brickyards"]:
             brickyard_filter = Q(brickyard__isnull=False)
+            if params["only_public_brickyards"]:
+                brickyard_filter &= Q(is_public=params["only_public_brickyards"])
             query_filter |= brickyard_filter
 
         if params["add_management"]:
@@ -124,16 +117,22 @@ class EmissionLimitByInstitutionView(OptionalPaginationMixin, ListAPIView):
     def get_query_params(self):
         """
         Query Parameters:
-        - add_brickyard     (bool): Add brickyard limits to the results.
-        - brickyard_ids     (list): Add emission limits that are associated with specific brickyards.
-        - add_management    (bool): Add management limits to the results.
-        - paginated         (bool): Return paginated results if true.
+        - is_public                 (bool): Return only public emission limits
+        - is_active                 (bool): Return only active emission limits.
+        - only_public_brickyards    (bool): Brickyard limits are public.
+        - add_all_brickyards        (bool): Add all brickyard limits to the results.
+        - add_brickyard_ids         (list): Add emission limits that are associated with specific brickyards.
+        - add_management            (bool): Add management limits to the results.
+        - paginated                 (bool): Return paginated results if true.
         """
 
         query_params = self.request.query_params
         return {
-            "add_brickyard": query_params.get("add_brickyard") in IS_TRUE,
-            "brickyard_ids": split_string(query_params.get("brickyard_ids")),
+            "is_public": query_params.get("is_public") in IS_TRUE,
+            "is_active": query_params.get("is_active") in IS_TRUE,
+            "only_public_brickyards": query_params.get("only_public_brickyards") in IS_TRUE,
+            "add_all_brickyards": query_params.get("add_all_brickyards") in IS_TRUE,
+            "add_brickyard_ids": split_string(query_params.get("add_brickyard_ids")),
             "add_management": query_params.get("add_management") in IS_TRUE,
             "paginated": query_params.get("paginated") in IS_TRUE,
         }
@@ -144,9 +143,7 @@ class EmissionLimitByInstitutionView(OptionalPaginationMixin, ListAPIView):
 
 
 class EmissionLimitByBrickyardView(OptionalPaginationMixin, ListAPIView):
-    """
-    Handle GET requests for emission limits by institution ID.
-    """
+    """Handle GET requests for emission limits by institution ID."""
 
     serializer_class = EmissionLimitWithLimitHistorySerializer
     permission_classes = [IsAuthenticated]
@@ -163,16 +160,20 @@ class EmissionLimitByBrickyardView(OptionalPaginationMixin, ListAPIView):
     def build_filters(brickyard_id, params):
         query_filter = Q(brickyard_id=brickyard_id)
 
-        if params["add_institution"]:
+        if params["is_active"]:
+            query_filter &= Q(is_active=params["is_active"])
+
+        if params["is_public"]:
+            query_filter &= Q(is_public=params["is_public"])
+
+        if params["add_all_institutions"]:
             institution_filter = Q(institution__isnull=False)
-            if params["is_public"]:
-                institution_filter &= Q(is_public=params["is_public"])
+            if params["only_public_institutions"]:
+                institution_filter &= Q(is_public=params["only_public_institutions"])
             query_filter |= institution_filter
 
         if params["add_management"]:
             management_filter = Q(management__brickyard_id=brickyard_id)
-            if params["is_public"]:
-                management_filter &= Q(is_public=params["is_public"])
             query_filter |= management_filter
 
         return query_filter
@@ -180,16 +181,20 @@ class EmissionLimitByBrickyardView(OptionalPaginationMixin, ListAPIView):
     def get_query_params(self):
         """
         Query Parameters:
-        - add_institution   (bool): Add institution limits to the results.
-        - add_management    (bool): Add management limits to the results.
-        - is_public         (bool): Institution limits are public.
-        - paginated         (bool): Return paginated results if true.
+        - is_public                 (bool): Return only public emission limits.
+        - is_active                 (bool): Return only active emission limits.
+        - add_all_institutions      (bool): Add institution limits to the results.
+        - only_public_institutions  (bool): Institution limits are public.
+        - add_management            (bool): Add management limits to the results.
+        - paginated                 (bool): Return paginated results if true.
         """
 
         query_params = self.request.query_params
         return {
             "is_public": query_params.get("is_public") in IS_TRUE,
-            "add_institution": query_params.get("add_institution") in IS_TRUE,
+            "is_active": query_params.get("is_active") in IS_TRUE,
+            "only_public_institutions": query_params.get("only_public_institutions") in IS_TRUE,
+            "add_all_institutions": query_params.get("add_all_institutions") in IS_TRUE,
             "add_management": query_params.get("add_management") in IS_TRUE,
             "paginated": query_params.get("paginated") in IS_TRUE,
         }
@@ -199,10 +204,19 @@ class EmissionLimitByBrickyardView(OptionalPaginationMixin, ListAPIView):
         return self.paginate_if_needed(queryset)
 
 
+class EmissionLimitByManagementView(ListAPIView):
+    """Handle GET requests for emission limits by management ID."""
+
+    serializer_class = EmissionLimitWithLimitHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        management_id = self.kwargs["management_id"]
+        return EmissionLimit.objects.filter(management_id=management_id)
+
+
 class EmissionLimitRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    """
-    Handle GET, PUT, PATCH and DELETE requests for a single emission limit.
-    """
+    """Handle GET, PUT, PATCH and DELETE requests for a single emission limit."""
 
     queryset = EmissionLimit.objects.all()
     serializer_class = EmissionLimitWithLimitHistorySerializer

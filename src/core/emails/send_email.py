@@ -18,7 +18,3 @@ def send_html_email(subject: str, recipients, template_name: str, context: dict)
     msg = EmailMultiAlternatives(subject, text_content, from_email, to)
     msg.attach_alternative(html_content, "text/html")
     msg.send()
-
-
-def send_only_text_email(subject, recipients):
-    pass

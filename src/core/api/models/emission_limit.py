@@ -1,7 +1,6 @@
 from django.db import models
 from core.api.validators import (
     validate_institution_brickyard_management,
-    validate_unique_default_for_institution,
 )
 
 
@@ -23,10 +22,9 @@ class EmissionLimit(models.Model):
         verbose_name="Público",
         help_text="Este límite de emisión puede ser visto por las ladrilleras",
     )
-    is_default = models.BooleanField(
+    is_active = models.BooleanField(
         default=False,
-        verbose_name="Predeterminado",
-        help_text="Este límite de emisión es el predeterminado",
+        verbose_name="Activo",
     )
 
     institution = models.ForeignKey(
@@ -65,7 +63,6 @@ class EmissionLimit(models.Model):
     def clean(self):
         super().clean()
         validate_institution_brickyard_management(self.institution, self.brickyard, self.management)
-        validate_unique_default_for_institution(self)
 
     def save(self, *args, **kwargs):
         self.clean()
