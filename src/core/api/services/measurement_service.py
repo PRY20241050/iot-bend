@@ -19,56 +19,41 @@ class MeasurementService:
 
     # Save
     @staticmethod
-    def save_measurements(data, datetime_obj):
-        device_id = data["deviceId"]
+    def save_measurements(data, datetime_obj, device: Device):
+        sensors = {sensor.gas_type_id: sensor for sensor in device.sensor_set.all()}
         gas_types = {
             "co": CO_ID,
             "no2": NO2_ID,
             "so2": SO2_ID,
             "pm25": PM25_ID,
             "pm10": PM10_ID,
+            "temperature": TEMPERATURE_ID,
         }
         measurements = []
 
         with transaction.atomic():
-            for gas, gas_id in gas_types.items():
-                sensor = MeasurementService.get_sensor(device_id, gas, gas_id)
-                measurement = Measurement.objects.create(
-                    value=data[gas], date=datetime_obj, sensor=sensor
-                )
-                measurements.append(measurement)
-
-            if "temperature" in data:
-                MeasurementService.save_temperature_measurement(
-                    device_id, data["temperature"], datetime_obj
+            for gas_type_name, gas_type_id in gas_types.items():
+                sensor = sensors.get(gas_type_id)
+                new_measurement = Measurement(
+                    value=data[gas_type_name], date=datetime_obj, sensor=sensor
                 )
 
+                if gas_type_name != "temperature":
+                    measurements.append(new_measurement)
+
+            Measurement.objects.bulk_create(measurements)
         return measurements
-
-    @staticmethod
-    def save_temperature_measurement(device_id, temperature, datetime_obj):
-        sensor = MeasurementService.get_sensor(device_id, "temperature", TEMPERATURE_ID)
-        Measurement.objects.create(value=temperature, date=datetime_obj, sensor=sensor)
-
-    @staticmethod
-    def get_sensor(device_id, gas, gas_id):
-        try:
-            return Sensor.objects.select_related("device", "gas_type").get(
-                device_id=device_id, gas_type_id=gas_id
-            )
-        except Sensor.DoesNotExist:
-            raise NotFound(f"No se encontró el sensor para: {gas}")
 
     @staticmethod
     def check_exceeded_limits(measurements):
         exceeded_limits = {}
 
         for measurement in measurements:
-            gas_name = measurement.sensor.gas_type.name
-            gas_id = measurement.sensor.gas_type_id
+            gas_type_name = measurement.sensor.gas_type.name
+            gas_type_id = measurement.sensor.gas_type_id
             brickyard_id = measurement.sensor.device.brickyard_id
 
-            base_filter = Q(gas_type_id=gas_id, emission_limit__is_active=True)
+            base_filter = Q(gas_type_id=gas_type_id, emission_limit__is_active=True)
             brickyard_filter = Q(emission_limit__brickyard_id=brickyard_id)
             management_filter = Q(emission_limit__management__brickyard_id=brickyard_id)
             institution_filter = Q(emission_limit__institution__isnull=False)
@@ -86,7 +71,7 @@ class MeasurementService:
 
                     exceeded_limits[emission_limit].append(
                         {
-                            "gas": gas_name,
+                            "gas": gas_type_name,
                             "measurement": measurement,
                             "limit_history": limit_history,
                         }

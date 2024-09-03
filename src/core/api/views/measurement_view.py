@@ -37,15 +37,18 @@ class MeasurementAPICreateView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         data = serializer.validated_data
+        device = (
+            Device.objects.select_related("brickyard")
+            .prefetch_related("sensor_set")
+            .get(id=data["deviceId"])
+        )
+        datetime_obj = parse_datetime(f"{data['date']} {data['time']}")
 
-        datetime_str = f"{data['date']} {data['time']}"
-        datetime_obj = parse_datetime(datetime_str)
-
-        measurements = MeasurementService.save_measurements(data, datetime_obj)
+        measurements = MeasurementService.save_measurements(data, datetime_obj, device)
         exceeded_limits = MeasurementService.check_exceeded_limits(measurements)
 
-        device = Device.objects.select_related("brickyard").get(id=data["deviceId"])
         device.status = True
         device.save(update_fields=["status", "updated_at"])
 
