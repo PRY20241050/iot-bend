@@ -3,8 +3,18 @@ from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db.models import Q, Avg, F, Window, Max, Min
 from django.db.models.functions import Trunc, RowNumber, Round
-from core.api.models import Measurement, GasType, LimitHistory, Device, Brickyard, EmissionLimit
+from core.api.models import (
+    Measurement,
+    GasType,
+    LimitHistory,
+    Device,
+    Brickyard,
+    EmissionLimit,
+    Alert,
+)
 from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
+from core.emails import send_html_email
+from core.users.models import CustomUser
 from core.utils import split_string
 from core.utils.consts import IS_TRUE
 
@@ -65,7 +75,7 @@ class MeasurementService:
                 gas_type_name = measurement.sensor.gas_type.name
                 limit_history = limit_histories.get(gas_type_id)
 
-                if limit_history and measurement.value < limit_history.max_limit:
+                if limit_history and measurement.value > limit_history.max_limit:
                     if emission_limit not in exceeded_emission_limits:
                         exceeded_emission_limits[emission_limit] = []
 
@@ -78,6 +88,94 @@ class MeasurementService:
                     )
 
         return exceeded_emission_limits
+
+    @staticmethod
+    def schedule_device_deactivation(device):
+        pass
+
+    @staticmethod
+    def handle_alerts_and_notifications(exceeded_limits, brickyard):
+        for emission_limit, gases in exceeded_limits.items():
+            if not emission_limit.is_active and (
+                emission_limit.email_alert or emission_limit.app_alert
+            ):
+                continue
+
+            recipients_brickyard, recipients_institution = MeasurementService.get_recipients(
+                emission_limit, brickyard
+            )
+
+            context = {"emission_limit": emission_limit, "gases": gases}
+            message = MeasurementService.create_email_message(emission_limit, gases)
+
+            MeasurementService.send_alerts(
+                recipients_brickyard,
+                emission_limit,
+                f"Alerta de {emission_limit.name}",
+                context,
+                message,
+            )
+            MeasurementService.send_alerts(
+                recipients_institution,
+                emission_limit,
+                f"Alerta en ladrillera {brickyard.name}",
+                {**context, "brickyard": brickyard},
+                message,
+            )
+
+    @staticmethod
+    def get_recipients(emission_limit, brickyard):
+        recipients_brickyard = set()
+        recipients_institution = set()
+
+        query_brickyard = Q()
+        query_institution = Q()
+        if emission_limit.institution:
+            query_institution |= Q(institution=emission_limit.institution)
+            if emission_limit.is_public:
+                query_brickyard |= Q(brickyard=brickyard)
+        elif emission_limit.management:
+            query_institution |= Q(institution=emission_limit.management.institution)
+            if emission_limit.is_public:
+                query_brickyard |= Q(brickyard=emission_limit.management.brickyard)
+        elif emission_limit.brickyard:
+            query_brickyard |= Q(brickyard=emission_limit.brickyard)
+
+        if query_brickyard:
+            recipients_brickyard.update(CustomUser.objects.filter(query_brickyard))
+        if query_institution:
+            recipients_institution.update(CustomUser.objects.filter(query_institution))
+
+        return list(recipients_brickyard), list(recipients_institution)
+
+    @staticmethod
+    def create_email_message(emission_limit, gases):
+        message = f"Se ha superado el límite de emisión '{emission_limit.name}' para los siguientes gases:\n"
+        for gas in gases:
+            message += (
+                f" * Gas: {gas['gas']}. "
+                f"Máximo permitido: {gas['limit_history'].max_limit}. "
+                f"Concentración registrada: {gas['measurement'].value}\n"
+            )
+        return message
+
+    @staticmethod
+    def send_alerts(recipients, emission_limit, subject, context, message):
+        for recipient in recipients:
+            if emission_limit.email_alert:
+                send_html_email(
+                    subject,
+                    recipient.email,
+                    "emails/alerts/measurement_alert.html",
+                    context,
+                )
+            if emission_limit.app_alert:
+                Alert.objects.create(
+                    name=subject,
+                    short_description=f"Se superó el límite de emisión {emission_limit.name}",
+                    description=message,
+                    user=recipient,
+                )
 
     @staticmethod
     def get_query_params(request) -> dict:
