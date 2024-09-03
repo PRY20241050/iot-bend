@@ -1,10 +1,9 @@
 from collections import defaultdict
-from rest_framework.exceptions import NotFound
 from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db.models import Q, Avg, F, Window, Max, Min
 from django.db.models.functions import Trunc, RowNumber, Round
-from core.api.models import Measurement, Sensor, GasType, LimitHistory, Device
+from core.api.models import Measurement, GasType, LimitHistory, Device, Brickyard, EmissionLimit
 from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
 from core.utils import split_string
 from core.utils.consts import IS_TRUE
@@ -45,31 +44,32 @@ class MeasurementService:
         return measurements
 
     @staticmethod
-    def check_exceeded_limits(measurements):
-        exceeded_limits = {}
+    def check_exceeded_limits(measurements, brickyard: Brickyard):
+        exceeded_emission_limits = {}
 
-        for measurement in measurements:
-            gas_type_name = measurement.sensor.gas_type.name
-            gas_type_id = measurement.sensor.gas_type_id
-            brickyard_id = measurement.sensor.device.brickyard_id
+        base_filter = Q(is_active=True)
+        brickyard_filter = Q(brickyard=brickyard)
+        management_filter = Q(management__brickyard=brickyard)
+        institution_filter = Q(institution__isnull=False)
 
-            base_filter = Q(gas_type_id=gas_type_id, emission_limit__is_active=True)
-            brickyard_filter = Q(emission_limit__brickyard_id=brickyard_id)
-            management_filter = Q(emission_limit__management__brickyard_id=brickyard_id)
-            institution_filter = Q(emission_limit__institution__isnull=False)
+        emission_limits = EmissionLimit.objects.prefetch_related("limithistory_set").filter(
+            base_filter & (brickyard_filter | management_filter | institution_filter)
+        )
 
-            limit_histories = LimitHistory.objects.select_related("emission_limit").filter(
-                base_filter & (brickyard_filter | management_filter | institution_filter)
-            )
+        for emission_limit in emission_limits:
+            limit_histories = {
+                limit.gas_type_id: limit for limit in emission_limit.limithistory_set.all()
+            }
+            for measurement in measurements:
+                gas_type_id = measurement.sensor.gas_type_id
+                gas_type_name = measurement.sensor.gas_type.name
+                limit_history = limit_histories.get(gas_type_id)
 
-            for limit_history in limit_histories:
-                if measurement.value > limit_history.max_limit:
-                    emission_limit = limit_history.emission_limit
+                if limit_history and measurement.value < limit_history.max_limit:
+                    if emission_limit not in exceeded_emission_limits:
+                        exceeded_emission_limits[emission_limit] = []
 
-                    if emission_limit not in exceeded_limits:
-                        exceeded_limits[emission_limit] = []
-
-                    exceeded_limits[emission_limit].append(
+                    exceeded_emission_limits[emission_limit].append(
                         {
                             "gas": gas_type_name,
                             "measurement": measurement,
@@ -77,7 +77,7 @@ class MeasurementService:
                         }
                     )
 
-        return exceeded_limits
+        return exceeded_emission_limits
 
     @staticmethod
     def get_query_params(request) -> dict:

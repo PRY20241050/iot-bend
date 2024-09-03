@@ -46,13 +46,13 @@ class MeasurementAPICreateView(CreateAPIView):
         )
         datetime_obj = parse_datetime(f"{data['date']} {data['time']}")
 
+        brickyard = device.brickyard
+
         measurements = MeasurementService.save_measurements(data, datetime_obj, device)
-        exceeded_limits = MeasurementService.check_exceeded_limits(measurements)
+        exceeded_limits = MeasurementService.check_exceeded_limits(measurements, brickyard)
 
         device.status = True
         device.save(update_fields=["status", "updated_at"])
-
-        brickyard = device.brickyard
 
         self.schedule_device_deactivation(device)
 
