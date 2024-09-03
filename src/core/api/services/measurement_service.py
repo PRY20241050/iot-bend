@@ -78,7 +78,7 @@ class MeasurementService:
             )
 
             for limit_history in limit_histories:
-                if measurement.value < limit_history.max_limit:
+                if measurement.value > limit_history.max_limit:
                     emission_limit = limit_history.emission_limit
 
                     if emission_limit not in exceeded_limits:
