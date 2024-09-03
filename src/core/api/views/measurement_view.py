@@ -22,9 +22,7 @@ from core.utils.mixins import OptionalPaginationMixin
 
 
 class MeasurementCreateView(CreateAPIView):
-    """
-    Handle POST requests for measurement data.
-    """
+    """Handle POST requests for measurement data."""
 
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
@@ -32,6 +30,8 @@ class MeasurementCreateView(CreateAPIView):
 
 
 class MeasurementAPICreateView(CreateAPIView):
+    """Handle POST requests where all measurements data is sent at once."""
+
     serializer_class = CreateMeasurementSerializer
 
     def create(self, request, *args, **kwargs):
@@ -45,72 +45,108 @@ class MeasurementAPICreateView(CreateAPIView):
         measurements = MeasurementService.save_measurements(data, datetime_obj)
         exceeded_limits = MeasurementService.check_exceeded_limits(measurements)
 
-        device = Device.objects.get(id=data["deviceId"])
+        device = Device.objects.select_related("brickyard").get(id=data["deviceId"])
         device.status = True
         device.save(update_fields=["status", "updated_at"])
+
+        brickyard = device.brickyard
 
         self.schedule_device_deactivation(device)
 
         if exceeded_limits:
-            self.send_alerts_and_create_notifications(exceeded_limits)
+            self.handle_alerts_and_notifications(exceeded_limits, brickyard)
 
         return custom_response("Guardado exitosamente", status.HTTP_201_CREATED)
 
-    def send_alerts_and_create_notifications(self, exceeded_limits):
+    def handle_alerts_and_notifications(self, exceeded_limits, brickyard):
         for emission_limit, gases in exceeded_limits.items():
-            recipients = self.get_recipients(emission_limit) if emission_limit.email_alert else []
+            if not emission_limit.is_active and (
+                emission_limit.email_alert or emission_limit.app_alert
+            ):
+                continue
 
-            for recipient in recipients:
-                if emission_limit.email_alert:
-                    subject = "Alerta de Límite de Emisión Excedido"
-                    send_html_email(
-                        subject,
-                        recipient.email,
-                        "emails/alerts/measurement_alert.html",
-                        {"emission_limit": emission_limit, "gases": gases},
-                    )
+            recipients_brickyard, recipients_institution = self.get_recipients(
+                emission_limit, brickyard
+            )
 
-                if emission_limit.app_alert:
-                    message = self.create_email_message(emission_limit, gases)
+            context = {"emission_limit": emission_limit, "gases": gases}
+            message = self.create_email_message(emission_limit, gases)
 
-                    Alert.objects.create(
-                        name=f"Alerta de {emission_limit.name}",
-                        description=message,
-                        user=recipient,
-                    )
+            self.send_alerts(
+                recipients_brickyard,
+                emission_limit,
+                f"Alerta de {emission_limit.name}",
+                context,
+                message,
+            )
+            self.send_alerts(
+                recipients_institution,
+                emission_limit,
+                f"Alerta en ladrillera {brickyard.name}",
+                {**context, "brickyard": brickyard},
+                message,
+            )
+
+    @staticmethod
+    def get_recipients(emission_limit, brickyard):
+        recipients_brickyard = set()
+        recipients_institution = set()
+        if emission_limit.institution:
+            recipients_institution.update(
+                CustomUser.objects.filter(institution=emission_limit.institution)
+            )
+            if emission_limit.is_public:
+                recipients_brickyard.update(CustomUser.objects.filter(brickyard=brickyard))
+        elif emission_limit.management:
+            recipients_institution.update(
+                CustomUser.objects.filter(institution=emission_limit.management.institution)
+            )
+            if emission_limit.is_public:
+                recipients_brickyard.update(
+                    CustomUser.objects.filter(brickyard=emission_limit.management.brickyard)
+                )
+        elif emission_limit.brickyard:
+            recipients_brickyard.update(
+                CustomUser.objects.filter(brickyard=emission_limit.brickyard)
+            )
+
+        return list(recipients_brickyard), list(recipients_institution)
 
     @staticmethod
     def create_email_message(emission_limit, gases):
         message = f"Se ha superado el límite de emisión '{emission_limit.name}' para los siguientes gases:\n"
-        for gas_info in gases:
-            message += f" * Gas: {gas_info['gas']}, Concentración registrada: {gas_info['value']}\n"
+        for gas in gases:
+            message += (
+                f" * Gas: {gas['gas']}. "
+                f"Máximo permitido: {gas['limit_history'].max_limit}. "
+                f"Concentración registrada: {gas['measurement'].value}\n"
+            )
         return message
 
     @staticmethod
-    def get_recipients(emission_limit):
-        recipients = set()
-        if emission_limit.institution:
-            users = CustomUser.objects.filter(institution=emission_limit.institution)
-            recipients.update(users)
-        if emission_limit.management:
-            brickyard_users = CustomUser.objects.filter(
-                brickyard=emission_limit.management.brickyard
-            )
-            institution_users = CustomUser.objects.filter(
-                institution=emission_limit.management.institution
-            )
-            recipients.update([*brickyard_users, *institution_users])
-
-        return list(recipients)
+    def send_alerts(recipients, emission_limit, subject, context, message):
+        for recipient in recipients:
+            if emission_limit.email_alert:
+                send_html_email(
+                    subject,
+                    recipient.email,
+                    "emails/alerts/measurement_alert.html",
+                    context,
+                )
+            if emission_limit.app_alert:
+                Alert.objects.create(
+                    name=subject,
+                    short_description=f"Se superó el límite de emisión {emission_limit.name}",
+                    description=message,
+                    user=recipient,
+                )
 
     def schedule_device_deactivation(self, device):
         pass
 
 
 class MeasurementRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
-    """
-    Handle GET, PUT, PATCH, and DELETE requests for a single measurement.
-    """
+    """Handle GET, PUT, PATCH, and DELETE requests for a single measurement."""
 
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer

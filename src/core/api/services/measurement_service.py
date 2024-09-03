@@ -1,5 +1,5 @@
 from collections import defaultdict
-from rest_framework import status
+from rest_framework.exceptions import NotFound
 from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db.models import Q, Avg, F, Window, Max, Min
@@ -8,7 +8,6 @@ from core.api.models import Measurement, Sensor, GasType, LimitHistory, Device
 from core.api.models.gas_type import CO_ID, NO2_ID, SO2_ID, PM25_ID, PM10_ID, TEMPERATURE_ID
 from core.utils import split_string
 from core.utils.consts import IS_TRUE
-from core.utils.response import custom_response
 
 
 class MeasurementService:
@@ -58,25 +57,28 @@ class MeasurementService:
                 device_id=device_id, gas_type_id=gas_id
             )
         except Sensor.DoesNotExist:
-            raise custom_response(
-                f"No se encontró el sensor para: {gas}", status.HTTP_400_BAD_REQUEST
-            )
+            raise NotFound(f"No se encontró el sensor para: {gas}")
 
     @staticmethod
     def check_exceeded_limits(measurements):
         exceeded_limits = {}
 
         for measurement in measurements:
-            gas = measurement.sensor.gas_type.name
+            gas_name = measurement.sensor.gas_type.name
             gas_id = measurement.sensor.gas_type_id
+            brickyard_id = measurement.sensor.device.brickyard_id
+
+            base_filter = Q(gas_type_id=gas_id, emission_limit__is_active=True)
+            brickyard_filter = Q(emission_limit__brickyard_id=brickyard_id)
+            management_filter = Q(emission_limit__management__brickyard_id=brickyard_id)
+            institution_filter = Q(emission_limit__institution__isnull=False)
 
             limit_histories = LimitHistory.objects.select_related("emission_limit").filter(
-                gas_type_id=gas_id,
-                emission_limit__management__brickyard=measurement.sensor.device.brickyard,
+                base_filter & (brickyard_filter | management_filter | institution_filter)
             )
 
             for limit_history in limit_histories:
-                if measurement.value > limit_history.max_limit:
+                if measurement.value < limit_history.max_limit:
                     emission_limit = limit_history.emission_limit
 
                     if emission_limit not in exceeded_limits:
@@ -84,8 +86,7 @@ class MeasurementService:
 
                     exceeded_limits[emission_limit].append(
                         {
-                            "gas": gas,
-                            "value": measurement.value,
+                            "gas": gas_name,
                             "measurement": measurement,
                             "limit_history": limit_history,
                         }
