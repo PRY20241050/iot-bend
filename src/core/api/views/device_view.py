@@ -34,7 +34,7 @@ class DeviceListCreateView(ListCreateAPIView):
                     .first()
                 )
                 if last_measurement:
-                    if (now - last_measurement.date).total_seconds() > 30:
+                    if (now - last_measurement.date).total_seconds() > 90:
                         device.status = False
                         device.save()
 
