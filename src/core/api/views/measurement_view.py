@@ -46,13 +46,12 @@ class MeasurementAPICreateView(CreateAPIView):
         brickyard = device.brickyard
 
         measurements = MeasurementService.save_measurements(data, datetime_obj, device)
-        exceeded_limits = MeasurementService.check_exceeded_limits(measurements, brickyard)
 
         device.status = True
         device.save(update_fields=["status", "updated_at"])
 
+        exceeded_limits = MeasurementService.check_exceeded_limits(measurements, brickyard)
         MeasurementService.schedule_device_deactivation(device)
-
         if exceeded_limits:
             MeasurementService.handle_alerts_and_notifications(exceeded_limits, brickyard)
 

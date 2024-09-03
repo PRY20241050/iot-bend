@@ -1,5 +1,5 @@
 from .alert_serializer import AlertSerializer
-from .device_serializer import DeviceSerializer
+from .device_serializer import DeviceWithSensorsSerializer, DeviceSerializer
 from .brickyard_serializer import BrickyardSerializer
 from .institution_serializer import InstitutionSerializer
 from .management_serializer import ManagementSerializer
