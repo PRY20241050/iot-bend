@@ -34,7 +34,9 @@ class DeviceListCreateView(ListCreateAPIView):
                     .first()
                 )
                 if last_measurement:
-                    if (now - last_measurement.date).total_seconds() > 90:
+                    if (now - last_measurement.date).total_seconds() > int(
+                        params["revalidation_time_in_seconds"]
+                    ):
                         device.status = False
                         device.save()
 
@@ -46,6 +48,7 @@ class DeviceListCreateView(ListCreateAPIView):
         Query Parameters:
         - brickyard_id (int): Filter devices by brickyard ID.
         - with_sensors (bool): Include sensors data in the response.
+        - revalidation_time_in_seconds (int): Time in seconds to revalidate the device status.
         """
 
         query_params = self.request.query_params
@@ -53,6 +56,11 @@ class DeviceListCreateView(ListCreateAPIView):
         return {
             "brickyard_id": query_params.get("brickyard_id"),
             "with_sensors": query_params.get("with_sensors") in IS_TRUE,
+            "revalidation_time_in_seconds": (
+                query_params.get("revalidation_time_in_seconds")
+                if query_params.get("revalidation_time_in_seconds")
+                else 120
+            ),
         }
 
 
