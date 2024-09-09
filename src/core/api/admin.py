@@ -41,7 +41,7 @@ class ManagementAdmin(admin.ModelAdmin):
 
 class DeviceAdmin(admin.ModelAdmin):
     model = models.Device
-    list_display = ["id", "name", "status", "battery_level", "brickyard"]
+    list_display = ["id", "name", "status", "brickyard"]
     inlines = [SensorInline]
 
 
