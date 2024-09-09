@@ -2,9 +2,9 @@ from django.db import models
 
 
 class Brickyard(models.Model):
-    name = models.CharField(max_length=150, blank=True, verbose_name="Nombre")
-    address = models.CharField(max_length=200, blank=True, verbose_name="Dirección")
-    ruc = models.CharField(max_length=11, blank=True, verbose_name="RUC")
+    name = models.CharField(max_length=150, verbose_name="Nombre")
+    address = models.CharField(max_length=200, verbose_name="Dirección")
+    ruc = models.CharField(max_length=11, verbose_name="RUC")
     phone = models.IntegerField(blank=True, null=True, verbose_name="Teléfono")
     contact = models.CharField(max_length=100, blank=True, verbose_name="Contacto")
 
