@@ -15,6 +15,8 @@ class CustomUserAdmin(admin.ModelAdmin):
         "is_staff",
         "is_superuser",
     ]
+    list_filter = ["role", "brickyard", "institution", "is_staff", "is_superuser"]
+    search_fields = ["username", "email"]
 
     def save_model(self, request, obj, form, change):
         try:
