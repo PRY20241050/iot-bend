@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Device(models.Model):
-    name = models.CharField(max_length=100, blank=True, verbose_name="Nombre")
+    name = models.CharField(max_length=100, verbose_name="Nombre")
     description = models.TextField(max_length=500, blank=True, verbose_name="Descripción")
     status = models.BooleanField(default=False, verbose_name="Está activado")
     battery_level = models.DecimalField(
