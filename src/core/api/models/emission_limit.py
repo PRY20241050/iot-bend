@@ -17,6 +17,11 @@ class EmissionLimit(models.Model):
         verbose_name="Alerta por aplicación",
         help_text="Se enviará una notificación a la aplicación",
     )
+    gap_time = models.IntegerField(
+        default=0,
+        verbose_name="Tiempo entre alertas (segundos)",
+        help_text="Tiempo en segundos que debe pasar para que se envíe una nueva alertas. Por defecto: 0",
+    )
     is_public = models.BooleanField(
         default=False,
         verbose_name="Público",
