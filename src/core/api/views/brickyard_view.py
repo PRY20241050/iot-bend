@@ -9,7 +9,7 @@ class BrickyardListCreateView(ListCreateAPIView):
     Handle GET and POST requests for brickyard data.
     """
 
-    queryset = Brickyard.objects.all()
+    queryset = Brickyard.objects.filter(visible=True)
     serializer_class = BrickyardSerializer
     permission_classes = [IsAuthenticated]
 
