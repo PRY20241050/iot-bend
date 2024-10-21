@@ -22,23 +22,24 @@ class DeviceListCreateView(ListCreateAPIView):
         params = self.get_query_params()
 
         if params["brickyard_id"]:
-            # Update device status
             devices = self.queryset.filter(brickyard_id=params["brickyard_id"])
             update_devices = devices.prefetch_related("sensor_set__measurement_set")
             for device in update_devices:
                 now = timezone.now()
-                last_measurement = (
-                    device.sensor_set.order_by("id")
-                    .first()
-                    .measurement_set.order_by("-date")
-                    .first()
-                )
-                if last_measurement:
-                    if (now - last_measurement.date).total_seconds() > int(
-                        params["revalidation_time_in_seconds"]
-                    ):
+                first_sensor = device.sensor_set.order_by("id").first()
+                if first_sensor:
+                    last_measurement = first_sensor.measurement_set.order_by("-date").first()
+                    if not last_measurement:
                         device.status = False
-                        device.save()
+                    else:
+                        if (now - last_measurement.date).total_seconds() > int(
+                            params["revalidation_time_in_seconds"]
+                        ):
+                            device.status = False
+                else:
+                    device.status = False
+
+                device.save()
 
             return devices
         return self.get_queryset().all()
