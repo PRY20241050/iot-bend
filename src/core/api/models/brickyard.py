@@ -7,7 +7,9 @@ class Brickyard(models.Model):
     ruc = models.CharField(max_length=11, verbose_name="RUC")
     phone = models.IntegerField(blank=True, null=True, verbose_name="Teléfono")
     contact = models.CharField(max_length=100, blank=True, verbose_name="Contacto")
-    visible = models.BooleanField(default=True, verbose_name="Ladrillera es visible")
+    visible = models.BooleanField(
+        default=True, verbose_name="Visible", help_text="Visible para los usuarios"
+    )
 
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
