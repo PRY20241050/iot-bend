@@ -66,8 +66,16 @@ class EmissionLimit(models.Model):
         verbose_name_plural = "Límites de emisión"
 
     def clean(self):
-        super().clean()
-        validate_institution_brickyard_management(self.institution, self.brickyard, self.management)
+        if not self.pk:
+            super().clean()
+            validate_institution_brickyard_management(
+                self.institution, self.brickyard, self.management
+            )
+        else:
+            if self.institution or self.brickyard or self.management:
+                validate_institution_brickyard_management(
+                    self.institution, self.brickyard, self.management
+                )
 
     def save(self, *args, **kwargs):
         self.clean()

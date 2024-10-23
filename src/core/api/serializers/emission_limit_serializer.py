@@ -12,9 +12,11 @@ class BaseEmissionLimitSerializer(serializers.ModelSerializer):
         exclude = ["created_at", "updated_at"]
 
     def validate(self, data):
-        validate_institution_brickyard_management(
-            data.get("institution"), data.get("brickyard"), data.get("management")
-        )
+        request = self.context.get("request")
+        if request.method == "POST" or request.method == "PUT":
+            validate_institution_brickyard_management(
+                data.get("institution"), data.get("brickyard"), data.get("management")
+            )
         return data
 
 
