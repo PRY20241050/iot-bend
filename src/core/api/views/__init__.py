@@ -14,7 +14,6 @@ from .sensor_view import (
     SensorRetrieveUpdateDestroyView,
     SensorsByDeviceView,
     SensorLastMeasurementView,
-    SensorWithMeasurementsHistoryView,
 )
 from .measurement_view import (
     MeasurementCreateView,

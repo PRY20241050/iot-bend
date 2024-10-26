@@ -36,6 +36,8 @@ class DeviceListCreateView(ListCreateAPIView):
                             params["revalidation_time_in_seconds"]
                         ):
                             device.status = False
+                        else:
+                            device.status = True
                 else:
                     device.status = False
 

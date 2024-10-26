@@ -172,7 +172,7 @@ limit_history_patterns = [
 
 # Alerts URLs
 alerts_patterns = [
-    path("my-alerts/", views.AlertListView.as_view(), name="my-alerts-list"),
+    path("my-alerts/", views.AlertListView.as_view(), name="my-alert-list"),
     path(
         "my-alerts/<int:pk>/",
         views.AlertRetrieveUpdateDestroyView.as_view(),
